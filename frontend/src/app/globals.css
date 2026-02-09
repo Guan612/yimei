@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+@font-face {
+  font-family: "Robot";
+  src: url("../assets/fonts/robot.ttf") format("truetype");
+  font-display: swap;
+}
+
 @theme inline {
   --color-background: hsl(0 0% 100%);
   --color-foreground: hsl(0 0% 17%);
@@ -92,7 +98,7 @@ html {
 body {
   background: var(--cream);
   color: var(--charcoal);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: "Robot", system-ui, sans-serif;
   font-weight: 400;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;

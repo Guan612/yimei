@@ -1,4 +1,9 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
+const API_BASE_URL =
+  (import.meta as ImportMeta & { env: Record<string, string | undefined> }).env
+    .VITE_API_URL ||
+  (import.meta as ImportMeta & { env: Record<string, string | undefined> }).env
+    .NEXT_PUBLIC_API_URL ||
+  "http://localhost:8010";
 
 // 后端统一返回格式
 interface ApiResponse<T = any> {

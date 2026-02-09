@@ -1,5 +1,10 @@
 import { ChatAction, SendChatDto } from '@/type/chat';
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010'
+const API_BASE_URL =
+  (import.meta as ImportMeta & { env: Record<string, string | undefined> }).env
+    .VITE_API_URL ||
+  (import.meta as ImportMeta & { env: Record<string, string | undefined> }).env
+    .NEXT_PUBLIC_API_URL ||
+  'http://localhost:8010'
 
 /**
  * 获取 token（复用统一逻辑）
