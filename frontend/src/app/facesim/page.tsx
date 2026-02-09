@@ -4,8 +4,11 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { FaceSimEditForm } from '@/components/facesim/FaceSimEditForm';
 import { SelectableImagePreview } from '@/components/facesim/SelectableImagePreview';
 import { Card } from '@/components/ui/card';
+import { useRouteGuard } from '@/hooks/auth/useRouteGuard';
 
 export default function FaceSimPage() {
+  useRouteGuard();
+
   return (
     <div className="min-h-screen bg-[var(--cream)]">
       <AppHeader />

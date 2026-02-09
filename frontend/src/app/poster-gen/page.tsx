@@ -6,8 +6,11 @@ import { ImagePreview } from '@/components/poster-gen/ImagePreview';
 import { GenerationHistory } from '@/components/poster-gen/GenerationHistory';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { useRouteGuard } from '@/hooks/auth/useRouteGuard';
 
 export default function PosterGenPage() {
+  useRouteGuard();
+
   return (
     <div className="min-h-screen bg-[var(--cream)]">
       <AppHeader />

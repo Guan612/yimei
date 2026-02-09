@@ -70,7 +70,7 @@ export default function Home() {
           </div>
           {token ? (
             <div className="flex items-center gap-4">
-              {userInfo.role === 2 && (
+              {userInfo.role !== 0 && (
                 <Link
                   href="/admin"
                   className="text-sm text-[var(--warm-gray)] hover:text-[var(--rose-gold)] transition-colors"

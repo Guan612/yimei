@@ -4,8 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAtomValue, useSetAtom } from "jotai";
 import { tokenAtom, userInfoAtom } from "@/store/auth";
+import { useRouteGuard } from "@/hooks/auth/useRouteGuard";
 
 export default function DashboardPage() {
+  useRouteGuard();
+
   const router = useRouter();
   const token = useAtomValue(tokenAtom);
   const userInfo = useAtomValue(userInfoAtom);
