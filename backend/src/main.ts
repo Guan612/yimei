@@ -27,7 +27,7 @@ async function bootstrap() {
 
   // Swagger 配置
 
-  if (appConfig.isProduction == true) {
+  if (appConfig.isProduction == false) {
     const config = new DocumentBuilder()
       .setTitle('医美管理系统')
       .setDescription('医美管理系统 API 文档')
