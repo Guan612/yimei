@@ -321,5 +321,5 @@ api.addErrorInterceptor((error) => {
 });
 
 // 导出实例和类
-export { api };
+export { api, API_BASE_URL };
 export type { ApiResponse, RequestConfig };

@@ -1,23 +1,15 @@
-export interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-  imageUrls?: string[];
-}
+import { ChatAction, SendChatDto } from '@/type/chat';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010'
 
-export interface SendChatDto {
-  message: string;
-  context?: 'facesim' | 'poster' | 'general';
-  history?: ChatMessage[];
-  imageUrls?: string[];
+/**
+ * 获取 token（复用统一逻辑）
+ */
+function getAuthToken(): string {
+  if (typeof window === 'undefined') return '';
+  const token = localStorage.getItem('auth_token');
+  if (!token) return '';
+  return token.startsWith('"') ? JSON.parse(token) : token;
 }
-
-export interface ChatAction {
-  action: 'facesim' | 'poster';
-  prompt: string;
-  imageUrls?: string[];
-}
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
 
 /**
  * 流式对话 - 返回 ReadableStream
@@ -28,15 +20,12 @@ export async function sendChatStream(
   onDone: () => void,
   onError: (err: string) => void,
 ) {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-  const parsedToken = token ? (token.startsWith('"') ? JSON.parse(token) : token) : '';
-
   try {
     const response = await fetch(`${API_BASE_URL}/api/chat/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${parsedToken}`,
+        Authorization: `Bearer ${getAuthToken()}`,
       },
       body: JSON.stringify(data),
     });
