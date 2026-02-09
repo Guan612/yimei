@@ -1,233 +1,32 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
-import { useAtom, useAtomValue } from 'jotai';
-import {
-  originalImageAtom,
-  editedImageAtom,
-  selectedAreaAtom,
-  isProcessingAtom,
-  type SelectionArea,
-  type RectangleSelection,
-  type FreehandSelection,
-} from '@/store/facesim';
+import { useSelectableImagePreview } from '@/hooks/facesim';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-
-type ViewMode = 'single' | 'sideBySide' | 'slider';
-type DrawMode = 'rectangle' | 'freehand';
 
 export function SelectableImagePreview() {
-  const originalImage = useAtomValue(originalImageAtom);
-  const editedImage = useAtomValue(editedImageAtom);
-  const [selectedArea, setSelectedArea] = useAtom(selectedAreaAtom);
-  const isProcessing = useAtomValue(isProcessingAtom);
-
-  const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  // 绘制模式
-  const [drawMode, setDrawMode] = useState<DrawMode>('freehand');
-  const [isDrawing, setIsDrawing] = useState(false);
-
-  // 矩形选择
-  const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
-  const [currentPoint, setCurrentPoint] = useState<{ x: number; y: number } | null>(null);
-
-  // 自由绘制
-  const [freehandPoints, setFreehandPoints] = useState<Array<{ x: number; y: number }>>([]);
-
-  // 对比模式
-  const [viewMode, setViewMode] = useState<ViewMode>('single');
-  const [sliderPosition, setSliderPosition] = useState(50); // 滑块位置 (0-100)
-  const [isDraggingSlider, setIsDraggingSlider] = useState(false);
-
-  // 当前显示的图片（优先显示编辑后的图片）
-  const displayImage = editedImage?.url || originalImage?.url;
-
-  // 如果有编辑后的图片，自动切换到对比模式
-  useEffect(() => {
-    if (editedImage && originalImage) {
-      setViewMode('sideBySide');
-    } else if (!editedImage && originalImage) {
-      setViewMode('single');
-    }
-  }, [editedImage, originalImage]);
-
-  useEffect(() => {
-    // 重置选区当图片改变时
-    if (!displayImage) {
-      setSelectedArea(null);
-    }
-  }, [displayImage, setSelectedArea]);
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!displayImage || isProcessing || viewMode !== 'single') return;
-
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-    setIsDrawing(true);
-
-    if (drawMode === 'rectangle') {
-      setStartPoint({ x, y });
-      setCurrentPoint({ x, y });
-    } else {
-      // 自由绘制模式：开始新路径
-      setFreehandPoints([{ x, y }]);
-    }
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDrawing) return;
-
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-    if (drawMode === 'rectangle') {
-      if (!startPoint) return;
-      setCurrentPoint({ x, y });
-    } else {
-      // 自由绘制模式：添加点到路径
-      setFreehandPoints((prev) => [...prev, { x, y }]);
-    }
-  };
-
-  const handleMouseUp = () => {
-    if (!isDrawing) return;
-
-    if (drawMode === 'rectangle') {
-      if (!startPoint || !currentPoint) return;
-
-      const x = Math.min(startPoint.x, currentPoint.x);
-      const y = Math.min(startPoint.y, currentPoint.y);
-      const width = Math.abs(currentPoint.x - startPoint.x);
-      const height = Math.abs(currentPoint.y - startPoint.y);
-
-      // 只有在框选区域足够大时才保存
-      if (width > 2 && height > 2) {
-        setSelectedArea({
-          type: 'rectangle',
-          x,
-          y,
-          width,
-          height,
-        });
-        toast.success('区域已选中');
-      }
-
-      setStartPoint(null);
-      setCurrentPoint(null);
-    } else {
-      // 自由绘制模式：完成路径
-      if (freehandPoints.length < 3) {
-        toast.error('路径太短，请绘制更大的区域');
-        setFreehandPoints([]);
-      } else {
-        // 计算边界框
-        const xs = freehandPoints.map((p) => p.x);
-        const ys = freehandPoints.map((p) => p.y);
-        const minX = Math.min(...xs);
-        const maxX = Math.max(...xs);
-        const minY = Math.min(...ys);
-        const maxY = Math.max(...ys);
-
-        setSelectedArea({
-          type: 'freehand',
-          points: freehandPoints,
-          boundingBox: {
-            x: minX,
-            y: minY,
-            width: maxX - minX,
-            height: maxY - minY,
-          },
-        });
-        toast.success('区域已选中');
-        setFreehandPoints([]);
-      }
-    }
-
-    setIsDrawing(false);
-  };
-
-  // 滑块拖动
-  const handleSliderMouseDown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsDraggingSlider(true);
-  };
-
-  const handleSliderMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDraggingSlider) return;
-
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    const x = e.clientX - rect.left;
-    const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
-    setSliderPosition(percentage);
-  };
-
-  const handleSliderMouseUp = () => {
-    setIsDraggingSlider(false);
-  };
-
-  const handleClearSelection = () => {
-    setSelectedArea(null);
-    toast.info('已清除选区');
-  };
-
-  const handleDownload = async (type: 'original' | 'edited') => {
-    const url = type === 'original' ? originalImage?.url : editedImage?.url;
-    if (!url) return;
-
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = `facesim-${type}-${Date.now()}.png`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(downloadUrl);
-      document.body.removeChild(a);
-      toast.success('图片下载成功！');
-    } catch (error) {
-      toast.error('下载失败，请重试');
-    }
-  };
-
-  // 计算当前绘制的矩形或路径
-  const getCurrentDrawing = (): { type: 'rectangle'; rect: RectangleSelection } | { type: 'freehand'; points: Array<{ x: number; y: number }> } | null => {
-    if (!isDrawing) return null;
-
-    if (drawMode === 'rectangle') {
-      if (!startPoint || !currentPoint) return null;
-
-      const x = Math.min(startPoint.x, currentPoint.x);
-      const y = Math.min(startPoint.y, currentPoint.y);
-      const width = Math.abs(currentPoint.x - startPoint.x);
-      const height = Math.abs(currentPoint.y - startPoint.y);
-
-      return {
-        type: 'rectangle',
-        rect: { type: 'rectangle', x, y, width, height },
-      };
-    } else {
-      if (freehandPoints.length === 0) return null;
-      return {
-        type: 'freehand',
-        points: freehandPoints,
-      };
-    }
-  };
+  const {
+    originalImage,
+    editedImage,
+    selectedArea,
+    isProcessing,
+    containerRef,
+    drawMode,
+    setDrawMode,
+    viewMode,
+    setViewMode,
+    sliderPosition,
+    handleSliderMouseDown,
+    handleSliderMove,
+    handleSliderMouseUp,
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+    getCurrentDrawing,
+    handleClearSelection,
+    handleDownload,
+    displayImage,
+  } = useSelectableImagePreview();
 
   const currentDrawing = getCurrentDrawing();
 

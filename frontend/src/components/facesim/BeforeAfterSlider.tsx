@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useBeforeAfterSlider } from '@/hooks/facesim';
 
 interface BeforeAfterSliderProps {
   beforeImage: string;
@@ -13,45 +13,12 @@ export default function BeforeAfterSlider({
   afterImage,
   mode = 'slider'
 }: BeforeAfterSliderProps) {
-  const [sliderPosition, setSliderPosition] = useState(50);
-  const [isDragging, setIsDragging] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const handleMove = (clientX: number) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const percentage = (x / rect.width) * 100;
-    setSliderPosition(Math.max(0, Math.min(100, percentage)));
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging) {
-      handleMove(e.clientX);
-    }
-  };
-
-  const handleTouchMove = (e: TouchEvent) => {
-    if (isDragging && e.touches[0]) {
-      handleMove(e.touches[0].clientX);
-    }
-  };
-
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', () => setIsDragging(false));
-      document.addEventListener('touchmove', handleTouchMove);
-      document.addEventListener('touchend', () => setIsDragging(false));
-
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', () => setIsDragging(false));
-        document.removeEventListener('touchmove', handleTouchMove);
-        document.removeEventListener('touchend', () => setIsDragging(false));
-      };
-    }
-  }, [isDragging]);
+  const {
+    sliderPosition,
+    containerRef,
+    handleMouseDown,
+    handleTouchStart,
+  } = useBeforeAfterSlider();
 
   if (mode === 'sideBySide') {
     return (
@@ -72,8 +39,8 @@ export default function BeforeAfterSlider({
     <div
       ref={containerRef}
       className="relative w-full aspect-[3/4] overflow-hidden rounded-lg cursor-ew-resize select-none"
-      onMouseDown={() => setIsDragging(true)}
-      onTouchStart={() => setIsDragging(true)}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
     >
       <img
         src={beforeImage}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useImageUploader } from '@/hooks/facesim';
 
 interface ImageUploaderProps {
   onUpload: (file: File) => void;
@@ -8,59 +8,16 @@ interface ImageUploaderProps {
 }
 
 export default function ImageUploader({ onUpload, isLoading }: ImageUploaderProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isCameraActive, setIsCameraActive] = useState(false);
-  const [stream, setStream] = useState<MediaStream | null>(null);
-
-  const startCamera = async () => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user' }
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
-      setStream(mediaStream);
-      setIsCameraActive(true);
-    } catch (error) {
-      alert('无法访问摄像头');
-    }
-  };
-
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-    setIsCameraActive(false);
-  };
-
-  const capturePhoto = () => {
-    if (!videoRef.current) return;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.drawImage(videoRef.current, 0, 0);
-    canvas.toBlob((blob) => {
-      if (blob) {
-        const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
-        onUpload(file);
-        stopCamera();
-      }
-    }, 'image/jpeg');
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      onUpload(file);
-    }
-  };
+  const {
+    fileInputRef,
+    videoRef,
+    isCameraActive,
+    startCamera,
+    stopCamera,
+    capturePhoto,
+    handleFileSelect,
+    triggerFileInput
+  } = useImageUploader({ onUpload });
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -76,7 +33,7 @@ export default function ImageUploader({ onUpload, isLoading }: ImageUploaderProp
               disabled={isLoading}
             />
             <button
-              onClick={() => fileInputRef.current?.click()}
+              onClick={triggerFileInput}
               disabled={isLoading}
               className="px-6 py-3 bg-[#00A0E9] text-white rounded-lg hover:bg-[#0088c7] disabled:opacity-50 disabled:cursor-not-allowed"
             >
