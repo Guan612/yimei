@@ -232,6 +232,9 @@ export class ImageGenService implements OnModuleInit {
         seed: dto.seed,
         samples: dto.samples,
         model: dto.model,
+        referenceImageUrl: dto.referenceImageUrl,
+        referenceImageBase64: dto.referenceImageBase64,
+        referenceImageMimeType: dto.referenceImageMimeType,
       },
     );
 

@@ -12,7 +12,11 @@
       "Bash(pnpm run:*)",
       "Bash(tree:*)",
       "Bash(dir:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(npx tsc --noEmit)",
+      "WebSearch",
+      "Bash(npm install react-markdown)",
+      "Bash(npx tsc --noEmit --pretty)"
     ]
   }
 }

@@ -74,19 +74,43 @@ export class GeminiProvider extends BaseImageProvider {
         'gemini-2.5-flash-image-preview';
 
       // 构建请求体，按照 generateContent API 格式
+      const parts: any[] = [
+        {
+          text: prompt,
+        },
+      ];
+
+      // 如果有参考图片，优先使用 base64 数据，否则尝试下载 URL
+      if (options?.referenceImageBase64) {
+        this.logger.log('检测到参考图片(base64)，将作为 inline_data 传入 Gemini API');
+        parts.push({
+          inline_data: {
+            mime_type: options.referenceImageMimeType || 'image/jpeg',
+            data: options.referenceImageBase64,
+          },
+        });
+      } else if (options?.referenceImageUrl) {
+        this.logger.log('检测到参考图片(URL)，将下载并作为 inline_data 传入 Gemini API');
+        const imageBuffer = await this.downloadImage(options.referenceImageUrl);
+        const imageBase64 = imageBuffer.toString('base64');
+        const imageMimeType = this.getMimeType(options.referenceImageUrl);
+        parts.push({
+          inline_data: {
+            mime_type: imageMimeType,
+            data: imageBase64,
+          },
+        });
+      }
+
       const requestBody: any = {
         contents: [
           {
             role: 'user',
-            parts: [
-              {
-                text: prompt,
-              },
-            ],
+            parts,
           },
         ],
         generationConfig: {
-          responseModalities: ['TEXT', 'IMAGE'],
+          responseModalities: ['IMAGE'],
         },
       };
 
@@ -108,7 +132,7 @@ export class GeminiProvider extends BaseImageProvider {
             headers: {
               'Content-Type': 'application/json',
             },
-            timeout: 60000,
+            timeout: 300000,
           },
         ),
       );
@@ -122,17 +146,17 @@ export class GeminiProvider extends BaseImageProvider {
       }
 
       // 从 parts 中提取图片数据
-      const parts = candidates[0].content?.parts;
-      if (!parts || parts.length === 0) {
+      const responseParts = candidates[0].content?.parts;
+      if (!responseParts || responseParts.length === 0) {
         throw new Error('No parts in response');
       }
 
       // 查找包含图片的 part
-      const imagePart = parts.find((part: any) => part.inlineData);
+      const imagePart = responseParts.find((part: any) => part.inlineData);
       if (!imagePart || !imagePart.inlineData) {
         this.logger.error(
           'No image data in response. Parts:',
-          JSON.stringify(parts, null, 2),
+          JSON.stringify(responseParts, null, 2),
         );
         throw new Error('No image data in response');
       }
@@ -230,7 +254,7 @@ export class GeminiProvider extends BaseImageProvider {
             headers: {
               'Content-Type': 'application/json',
             },
-            timeout: 120000, // Gemini 图片生成可能需要更长时间
+            timeout: 300000, // Gemini 图片生成可能需要更长时间
           },
         ),
       );
@@ -314,7 +338,7 @@ export class GeminiProvider extends BaseImageProvider {
     const response = await firstValueFrom(
       this.httpService.get(url, {
         responseType: 'arraybuffer',
-        timeout: 30000,
+        timeout: 300000,
       }),
     );
     return Buffer.from(response.data);

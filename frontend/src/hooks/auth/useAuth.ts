@@ -32,7 +32,7 @@ export function useAuth() {
         role: res.data.role,
       });
       toast.success("登录成功");
-      router.push("/");
+      router.push(res.data.role === 2 ? "/admin" : "/");
     } else {
       toast.error(res.msg);
       setError(res.msg || "登录失败");

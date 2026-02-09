@@ -68,11 +68,11 @@ export function AdminSidebar() {
 
       <div className="mt-8 pt-8 border-t">
         <Link
-          href="/poster-gen"
+          href="/"
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          返回海报生成
+          返回前台
         </Link>
       </div>
     </div>

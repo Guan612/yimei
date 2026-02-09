@@ -104,6 +104,9 @@ export interface ImageGenerationOptions {
   seed?: number; // 随机种子
   samples?: number; // 生成数量
   model?: string; // 使用的具体模型
+  referenceImageUrl?: string; // 参考图片URL，用于图生图
+  referenceImageBase64?: string; // 参考图片Base64数据
+  referenceImageMimeType?: string; // 参考图片MIME类型
 }
 
 /**

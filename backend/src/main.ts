@@ -4,15 +4,22 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { cleanupOpenApiDoc } from 'nestjs-zod';
 import { AppConfigService } from './config/config.service';
 import { RequestMethod } from '@nestjs/common';
+import { json, urlencoded } from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bodyParser: false,
+  });
 
   // 获取配置服务
   const appConfig = app.get(AppConfigService);
 
   // 启用 CORS
   app.enableCors();
+
+  // 调大请求体限制（支持图片 base64 传输）
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ extended: true, limit: '50mb' }));
 
   app.setGlobalPrefix('api', {
     exclude: [{ path: '/', method: RequestMethod.GET }],

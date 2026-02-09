@@ -24,6 +24,7 @@ import { AppConfigService } from '../config/config.service';
             accessKeyId: s3Config.accessKeyId,
             secretAccessKey: s3Config.secretAccessKey,
           },
+          forcePathStyle: true,
         });
       },
       inject: [AppConfigService],

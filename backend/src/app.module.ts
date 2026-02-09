@@ -14,6 +14,7 @@ import { ImageGenModule } from './image-gen/image-gen.module';
 import { ZodExceptionFilter } from './common/filters/zod-exception.filter';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MedicalAestheticsModule } from './medical-aesthetics/medical-aesthetics.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { MedicalAestheticsModule } from './medical-aesthetics/medical-aesthetics
     ModelReqModule,
     ImageGenModule,
     MedicalAestheticsModule,
+    ChatModule,
   ],
   controllers: [],
   providers: [

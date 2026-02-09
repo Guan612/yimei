@@ -335,6 +335,7 @@ export function ModelConfigList() {
                     {...formDialog.form.register("type")}
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
+                    <option value="" disabled>请选择服务类型</option>
                     <option value="image-gen">图像生成</option>
                     <option value="text-gen">文本生成</option>
                     <option value="embedding">向量嵌入</option>

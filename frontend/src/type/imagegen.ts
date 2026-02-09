@@ -19,6 +19,9 @@ export interface GenerateImageRequest {
   seed?: number;
   samples?: number;
   model?: string;
+  referenceImageUrl?: string;
+  referenceImageBase64?: string;
+  referenceImageMimeType?: string;
 }
 
 export interface InpaintImageRequest {

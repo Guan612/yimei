@@ -45,7 +45,7 @@ export interface UseModelConfigFormReturn {
 const defaultValues: ModelConfigFormData = {
   name: "",
   provider: "openai",
-  type: "image-gen",
+  type: "" as any,
   baseUrl: "",
   apiKey: "",
   enabled: true,

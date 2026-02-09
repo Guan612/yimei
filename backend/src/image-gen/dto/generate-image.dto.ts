@@ -50,6 +50,18 @@ const GenerateImageSchema = z.object({
   seed: z.number().int().optional().describe('随机种子，用于复现结果'),
   samples: z.number().int().min(1).max(4).default(1).describe('生成图片数量'),
   model: z.string().optional().describe('指定使用的具体模型'),
+  referenceImageUrl: z
+    .string()
+    .optional()
+    .describe('参考图片URL，用于图生图场景（如facesim）'),
+  referenceImageBase64: z
+    .string()
+    .optional()
+    .describe('参考图片Base64数据，前端直接传入避免后端下载'),
+  referenceImageMimeType: z
+    .string()
+    .optional()
+    .describe('参考图片MIME类型，如image/jpeg'),
 });
 
 // Inpainting请求Schema
