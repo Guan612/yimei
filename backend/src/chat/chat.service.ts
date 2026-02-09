@@ -169,7 +169,7 @@ export class ChatService {
 
     const response = await firstValueFrom(
       this.httpService.post(
-        `${config.baseUrl}/chat/completions`,
+        `${config.baseUrl}/v1/chat/completions`,
         {
           model,
           messages,
