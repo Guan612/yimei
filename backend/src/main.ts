@@ -26,14 +26,17 @@ async function bootstrap() {
   });
 
   // Swagger 配置
-  const config = new DocumentBuilder()
-    .setTitle('医美管理系统')
-    .setDescription('医美管理系统 API 文档')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, cleanupOpenApiDoc(document));
+
+  if (appConfig.isProduction == true) {
+    const config = new DocumentBuilder()
+      .setTitle('医美管理系统')
+      .setDescription('医美管理系统 API 文档')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api', app, cleanupOpenApiDoc(document));
+  }
 
   const port = appConfig.port;
   await app.listen(port);
