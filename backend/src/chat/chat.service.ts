@@ -1,19 +1,11 @@
 import {
   Injectable,
   Logger,
-  ServiceUnavailableException,
 } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
-import { PrismaService } from '../prisma/prisma.service';
-import { AiModelConfig } from '../image-gen/providers/base.provider';
 import { SendMessageDto } from './dto/chat.dto';
 import { Response } from 'express';
-
-interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string | any[];
-}
+import { AiProviderService } from '../ai-provider/ai-provider.service';
+import { ChatMessage } from '../ai-provider/providers/base.provider';
 
 const SYSTEM_PROMPT = `你是 AesthetiCore 医美智能助手，一位专业的医学美容顾问。你的职责：
 
@@ -47,39 +39,17 @@ const SYSTEM_PROMPT = `你是 AesthetiCore 医美智能助手，一位专业的�
 export class ChatService {
   private readonly logger = new Logger(ChatService.name);
 
-  constructor(
-    private readonly httpService: HttpService,
-    private readonly prisma: PrismaService,
-  ) {}
-
-  private async getTextGenConfig(): Promise<AiModelConfig> {
-    const config = await this.prisma.aiModelConfig.findFirst({
-      where: {
-        type: 'text-gen',
-        enabled: true,
-      },
-      orderBy: {
-        priority: 'desc',
-      },
-    });
-
-    if (!config) {
-      throw new ServiceUnavailableException(
-        '当前没有可用的文本生成服务，请在管理后台添加 type=text-gen 的模型配置',
-      );
-    }
-
-    return config as AiModelConfig;
-  }
+  constructor(private readonly aiProviderService: AiProviderService) {}
 
   /**
    * SSE 流式发送消息
    */
   async sendMessageStream(dto: SendMessageDto, userId: number, res: Response) {
-    const config = await this.getTextGenConfig();
+    // 获取 text-gen provider
+    const provider = await this.aiProviderService.selectTextGenProvider();
 
     this.logger.log(
-      `用户 ${userId} 发送流式消息，使用配置：${config.name}（provider: ${config.provider}）`,
+      `用户 ${userId} 发送流式消息，使用配置：${provider.name}`,
     );
 
     // 构建消息列表
@@ -127,16 +97,7 @@ export class ChatService {
     res.flushHeaders();
 
     try {
-      switch (config.provider) {
-        case 'openai':
-          await this.streamOpenAI(config, messages, res);
-          break;
-        case 'gemini':
-          await this.streamGemini(config, messages, res);
-          break;
-        default:
-          res.write(`data: ${JSON.stringify({ error: `不支持的 provider：${config.provider}` })}\n\n`);
-      }
+      await provider.streamChat(messages, res);
     } catch (error) {
       this.logger.error('流式请求失败', error);
       res.write(`data: ${JSON.stringify({ error: '请求失败，请稍后重试' })}\n\n`);
@@ -155,169 +116,5 @@ export class ChatService {
       default:
         return '';
     }
-  }
-
-  /**
-   * OpenAI 流式调用
-   */
-  private async streamOpenAI(
-    config: AiModelConfig,
-    messages: ChatMessage[],
-    res: Response,
-  ) {
-    const model = config.modelId || 'gpt-4o-mini';
-
-    const response = await firstValueFrom(
-      this.httpService.post(
-        `${config.baseUrl}/v1/chat/completions`,
-        {
-          model,
-          messages,
-          temperature: 0.7,
-          stream: true,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${config.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          timeout: 300000,
-          responseType: 'stream',
-        },
-      ),
-    );
-
-    return new Promise<void>((resolve, reject) => {
-      let buffer = '';
-
-      response.data.on('data', (chunk: Buffer) => {
-        buffer += chunk.toString();
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || !trimmed.startsWith('data: ')) continue;
-          const data = trimmed.slice(6);
-          if (data === '[DONE]') continue;
-
-          try {
-            const parsed = JSON.parse(data);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              res.write(`data: ${JSON.stringify({ content })}\n\n`);
-            }
-          } catch {
-            // skip
-          }
-        }
-      });
-
-      response.data.on('end', () => resolve());
-      response.data.on('error', (err: Error) => reject(err));
-    });
-  }
-
-  /**
-   * Gemini 流式调用
-   */
-  private async streamGemini(
-    config: AiModelConfig,
-    messages: ChatMessage[],
-    res: Response,
-  ) {
-    const model = config.modelId || 'gemini-2.5-flash-preview';
-
-    // 转换消息格式为 Gemini 格式
-    const systemInstruction = messages.find((m) => m.role === 'system')?.content || '';
-    const contents: any[] = [];
-
-    for (const m of messages.filter((m) => m.role !== 'system')) {
-      const role = m.role === 'assistant' ? 'model' : 'user';
-      const parts: any[] = [];
-
-      if (Array.isArray(m.content)) {
-        for (const part of m.content) {
-          if (part.type === 'text') {
-            parts.push({ text: part.text });
-          } else if (part.type === 'image_url' && part.image_url?.url) {
-            try {
-              const imgResponse = await firstValueFrom(
-                this.httpService.get(part.image_url.url, {
-                  responseType: 'arraybuffer',
-                  timeout: 300000,
-                }),
-              );
-              const buffer = Buffer.from(imgResponse.data);
-              const base64 = buffer.toString('base64');
-              const contentType =
-                imgResponse.headers['content-type'] || 'image/jpeg';
-              parts.push({
-                inline_data: { mime_type: contentType, data: base64 },
-              });
-            } catch (err) {
-              this.logger.warn('下载图片失败，跳过图片内容', err);
-            }
-          }
-        }
-      } else {
-        parts.push({ text: m.content as string });
-      }
-
-      contents.push({ role, parts });
-    }
-
-    // 如果有 system prompt，放到第一条 user 消息前面
-    if (systemInstruction && contents.length > 0 && contents[0].role === 'user') {
-      contents[0].parts[0].text = `${systemInstruction}\n\n${contents[0].parts[0].text}`;
-    }
-
-    const response = await firstValueFrom(
-      this.httpService.post(
-        `${config.baseUrl}/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${config.apiKey}`,
-        {
-          contents,
-          generationConfig: {
-            temperature: 0.7,
-          },
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          timeout: 300000,
-          responseType: 'stream',
-        },
-      ),
-    );
-
-    return new Promise<void>((resolve, reject) => {
-      let buffer = '';
-
-      response.data.on('data', (chunk: Buffer) => {
-        buffer += chunk.toString();
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || !trimmed.startsWith('data: ')) continue;
-          const data = trimmed.slice(6);
-
-          try {
-            const parsed = JSON.parse(data);
-            const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (text) {
-              res.write(`data: ${JSON.stringify({ content: text })}\n\n`);
-            }
-          } catch {
-            // skip
-          }
-        }
-      });
-
-      response.data.on('end', () => resolve());
-      response.data.on('error', (err: Error) => reject(err));
-    });
   }
 }

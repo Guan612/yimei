@@ -15,6 +15,7 @@ import { ZodExceptionFilter } from './common/filters/zod-exception.filter';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MedicalAestheticsModule } from './medical-aesthetics/medical-aesthetics.module';
 import { ChatModule } from './chat/chat.module';
+import { AiProviderModule } from './ai-provider/ai-provider.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ChatModule } from './chat/chat.module';
       maxListeners: 20,
     }),
     AppConfigModule,
+    AiProviderModule,
     AuthModule,
     PrismaModule,
     UploadModule,

@@ -3,46 +3,21 @@ import {
   Injectable,
   Logger,
   NotFoundException,
-  OnModuleInit,
-  ServiceUnavailableException,
 } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
 import { PrismaService } from '../prisma/prisma.service';
 import { GenerateImageDto, InpaintImageDto } from './dto/generate-image.dto';
-import {
-  BaseImageProvider,
-  ImageGenerationResult,
-  AiModelConfig,
-} from './providers/base.provider';
 import { UploadService } from '../upload/upload.service';
-import { StabilityProvider } from './providers/stability.provider';
-import { OpenAIProvider } from './providers/openai.provider';
-import { GeminiProvider } from './providers/gemini.provider';
-import { OnEvent } from '@nestjs/event-emitter';
-import {
-  AI_MODEL_CONFIG_CHANGED,
-  AiModelConfigChangedPayload,
-} from 'src/common/events';
+import { AiProviderService } from '../ai-provider/ai-provider.service';
+import { ImageGenerationResult } from '../ai-provider/providers/base.provider';
 
 @Injectable()
-export class ImageGenService implements OnModuleInit {
+export class ImageGenService {
   private readonly logger = new Logger(ImageGenService.name);
-  private providerInstances: Map<number, BaseImageProvider> = new Map();
-
-  // Provider 类型映射表
-  private providerClassMap = new Map<
-    string,
-    new (httpService: HttpService) => BaseImageProvider
-  >([
-    ['stability', StabilityProvider],
-    ['openai', OpenAIProvider],
-    ['gemini', GeminiProvider],
-  ]);
 
   constructor(
-    private readonly httpService: HttpService,
     private readonly prisma: PrismaService,
     private readonly uploadService: UploadService,
+    private readonly aiProviderService: AiProviderService,
   ) {}
 
   private async resolveInjectedPrompts(ids?: number[]): Promise<string[]> {
@@ -88,128 +63,18 @@ export class ImageGenService implements OnModuleInit {
       : `${injectedText}, ${basePrompt}`;
   }
 
-  async onModuleInit() {
-    // 启动时加载所有启用的 Provider 配置
-    await this.loadProviders();
-  }
-
-  /**
-   * 从数据库加载所有启用的图像生成 Provider
-   */
-  async loadProviders() {
-    this.logger.log('正在从数据库加载图像生成服务配置...');
-
-    const configs = await this.prisma.aiModelConfig.findMany({
-      where: {
-        type: 'image-gen',
-        enabled: true,
-      },
-      orderBy: {
-        priority: 'desc', // 优先级高的排在前面
-      },
-    });
-
-    this.providerInstances.clear();
-
-    for (const config of configs) {
-      try {
-        const provider = this.createProvider(config);
-        if (provider) {
-          this.providerInstances.set(config.id, provider);
-          this.logger.log(
-            `已加载服务：${config.provider}（ID: ${config.id}，名称: ${config.name}）`,
-          );
-        }
-      } catch (error) {
-        this.logger.error(
-          `加载服务失败（ID: ${config.id}，类型: ${config.provider}）`,
-          error as any,
-        );
-      }
-    }
-
-    this.logger.log(`已加载 ${this.providerInstances.size} 个图像生成服务配置`);
-  }
-
-  /**
-   * 根据配置创建 Provider 实例
-   */
-  private createProvider(config: AiModelConfig): BaseImageProvider | null {
-    const ProviderClass = this.providerClassMap.get(config.provider);
-
-    if (!ProviderClass) {
-      this.logger.warn(`未知的服务类型：${config.provider}`);
-      return null;
-    }
-
-    const provider = new ProviderClass(this.httpService);
-    provider.setConfig(config);
-    return provider;
-  }
-
-  /**
-   * 根据配置 ID 获取 Provider
-   */
-  private getProviderById(configId: number): BaseImageProvider {
-    const provider = this.providerInstances.get(configId);
-    if (!provider) {
-      throw new NotFoundException(
-        `未找到配置 ID 为 ${configId} 的图像生成服务，或该服务已被禁用`,
-      );
-    }
-    return provider;
-  }
-
-  /**
-   * 根据 provider 类型获取第一个可用的 Provider
-   */
-  private getProviderByType(providerType: string): BaseImageProvider {
-    for (const provider of this.providerInstances.values()) {
-      if (provider.providerType === providerType) {
-        return provider;
-      }
-    }
-    throw new NotFoundException(
-      `当前没有可用的「${providerType}」图像生成服务`,
-    );
-  }
-
-  /**
-   * 自动选择可用的 Provider（按优先级）
-   */
-  private async selectProvider(): Promise<BaseImageProvider> {
-    for (const provider of this.providerInstances.values()) {
-      try {
-        const isValid = await provider.validateConfig();
-        if (isValid) {
-          this.logger.log(`自动选择图像生成服务：${provider.name}`);
-          return provider;
-        }
-      } catch (error) {
-        this.logger.warn(
-          `服务 ${provider.name} 校验失败：${(error as any)?.message || error}`,
-        );
-      }
-    }
-
-    throw new ServiceUnavailableException('当前没有任何可用的图像生成服务');
-  }
-
   /**
    * 生成图片
    */
   async generateImage(dto: GenerateImageDto, userId: number) {
     this.logger.log(`开始为用户 ${userId} 生成图片`);
 
-    // 选择 Provider
-    let provider: BaseImageProvider;
-    if (dto.configId) {
-      provider = this.getProviderById(dto.configId);
-    } else if (dto.provider && dto.provider !== 'auto') {
-      provider = this.getProviderByType(dto.provider);
-    } else {
-      provider = await this.selectProvider();
-    }
+    // 使用统一的 AI Provider 服务选择 Provider
+    const provider = dto.configId
+      ? this.aiProviderService.getImageGenProvider(dto.configId)
+      : dto.provider && dto.provider !== 'auto'
+        ? this.aiProviderService.getImageGenProvider(undefined, dto.provider)
+        : await this.aiProviderService.selectImageGenProvider();
 
     const injectedPrompts = await this.resolveInjectedPrompts(dto.promptInjectIds);
     const finalPrompt = this.buildInjectedPrompt({
@@ -343,15 +208,12 @@ export class ImageGenService implements OnModuleInit {
     const imageUrl = imageUrlResult.url;
     const maskUrl = maskUrlResult.url;
 
-    // 选择 Provider
-    let provider: BaseImageProvider;
-    if (dto.configId) {
-      provider = this.getProviderById(dto.configId);
-    } else if (dto.provider && dto.provider !== 'auto') {
-      provider = this.getProviderByType(dto.provider);
-    } else {
-      provider = await this.selectProvider();
-    }
+    // 使用统一的 AI Provider 服务选择 Provider
+    const provider = dto.configId
+      ? this.aiProviderService.getImageGenProvider(dto.configId)
+      : dto.provider && dto.provider !== 'auto'
+        ? this.aiProviderService.getImageGenProvider(undefined, dto.provider)
+        : await this.aiProviderService.selectImageGenProvider();
 
     const injectedPrompts = await this.resolveInjectedPrompts(dto.promptInjectIds);
     const finalPrompt = this.buildInjectedPrompt({
@@ -491,25 +353,7 @@ export class ImageGenService implements OnModuleInit {
    * 获取所有可用的 Provider 配置列表
    */
   async getAvailableProviders() {
-    const configs = await this.prisma.aiModelConfig.findMany({
-      where: {
-        type: 'image-gen',
-        enabled: true,
-      },
-      orderBy: {
-        priority: 'desc',
-      },
-      select: {
-        id: true,
-        name: true,
-        provider: true,
-        modelId: true,
-        description: true,
-        priority: true,
-      },
-    });
-
-    return configs;
+    return this.aiProviderService.getAvailableProviders('image-gen');
   }
 
   /**
@@ -517,23 +361,6 @@ export class ImageGenService implements OnModuleInit {
    */
   async reloadProviders() {
     this.logger.log('正在重新加载图像生成服务配置...');
-    await this.loadProviders();
-    return {
-      success: true,
-      count: this.providerInstances.size,
-    };
-  }
-
-  //监听数据库变化，重新加载配置
-  @OnEvent(AI_MODEL_CONFIG_CHANGED)
-  async handleConfigChanged(payload: AiModelConfigChangedPayload) {
-    // 只处理 image-gen 的配置变动
-    if (payload.type && payload.type !== 'image-gen') return;
-
-    this.logger.log(
-      `收到配置变更事件：action=${payload.action}, configId=${payload.configId}，开始 reloadProviders...`,
-    );
-
-    await this.reloadProviders();
+    return this.aiProviderService.reloadProviders();
   }
 }
