@@ -155,11 +155,6 @@ export function useFaceSimEditForm(): UseFaceSimEditFormReturn {
       return;
     }
 
-    if (!selectedArea) {
-      toast.error("请在图片上框选需要编辑的区域");
-      return;
-    }
-
     if (!editPrompt.trim()) {
       toast.error("请输入编辑提示词");
       return;
@@ -174,7 +169,16 @@ export function useFaceSimEditForm(): UseFaceSimEditFormReturn {
     setError(null);
 
     try {
-      const selectionDesc = includeLocationInPrompt
+      // 如果没有选择区域，使用整张图片作为默认选区
+      const effectiveSelection: SelectionArea = selectedArea || {
+        type: "rectangle",
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+      };
+
+      const selectionDesc = includeLocationInPrompt && selectedArea
         ? getSelectionDescription(selectedArea)
         : "";
       const fullPrompt = selectionDesc
@@ -183,7 +187,7 @@ export function useFaceSimEditForm(): UseFaceSimEditFormReturn {
 
       const result = await editImageApi({
         imageFile: originalImage.file,
-        selection: selectedArea,
+        selection: effectiveSelection,
         prompt: fullPrompt,
       });
 

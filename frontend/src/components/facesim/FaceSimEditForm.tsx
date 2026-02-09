@@ -235,12 +235,7 @@ export function FaceSimEditForm() {
       <div className="flex gap-2">
         <Button
           onClick={handleGenerate}
-          disabled={
-            isProcessing ||
-            !originalImage ||
-            !selectedArea ||
-            !editPrompt.trim()
-          }
+          disabled={isProcessing || !originalImage || !editPrompt.trim()}
           className="flex-1"
           size="lg"
         >
