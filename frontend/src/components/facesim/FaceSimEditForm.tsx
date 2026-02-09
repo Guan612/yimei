@@ -140,7 +140,7 @@ export function FaceSimEditForm() {
 
             {/* 分类选择 */}
             <div className="flex gap-1.5 flex-wrap">
-              {MEDICAL_AESTHETICS_CATEGORIES.map((cat) => (
+              {MEDICAL_AESTHETICS_CATEGORIES.filter((cat) => cat.id !== "poster").map((cat) => (
                 <Button
                   key={cat.id}
                   variant={selectedCategory === cat.id ? "default" : "outline"}

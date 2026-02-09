@@ -22,7 +22,7 @@ export function GenerationHistory() {
   const loadHistory = async () => {
     try {
       const res = await getHistoryImgApi(10, 0);
-      if (res.code == 0 && !res.data) {
+      if (res.code === 0) {
         toast.success("加载成功");
         setHistory(res.data || []);
       }

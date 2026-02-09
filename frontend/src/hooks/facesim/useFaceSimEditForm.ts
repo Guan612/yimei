@@ -227,7 +227,7 @@ export function useFaceSimEditForm(): UseFaceSimEditFormReturn {
   };
 
   const filteredTerms = medicalAestheticsTerm
-    ? medicalAestheticsTerm.filter((term) => term.category === selectedCategory)
+    ? medicalAestheticsTerm.filter((term) => term.category === selectedCategory && term.category !== "poster")
     : [];
 
   return {

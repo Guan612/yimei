@@ -1,3 +1,4 @@
+import { Label } from "@radix-ui/react-label";
 import z from "zod";
 
 export interface medicalAestheticsRespons {
@@ -22,12 +23,13 @@ export const MEDICAL_AESTHETICS_CATEGORIES = [
   { id: "eyes", label: "眼部" },
   { id: "nose", label: "鼻部" },
   { id: "lips", label: "唇部" },
+  { id: "poster", label: "海报提示词" },
   { id: "other", label: "其他" },
 ] as const;
 
 const CreateMedicalAesthetiShema = z.object({
   category: z
-    .enum(["skin", "face", "eyes", "nose", "lips", "other"])
+    .enum(["skin", "face", "eyes", "nose", "lips", "poster", "other"])
     .describe("选择添加提示词部位"),
   label: z.string().min(1, { message: "需要填写选项" }),
   prompt: z.string().min(1, { message: "需要填写提示词" }),

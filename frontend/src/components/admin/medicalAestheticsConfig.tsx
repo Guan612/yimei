@@ -48,7 +48,7 @@ import { toast } from "sonner";
 
 // 表单验证schema
 const formSchema = z.object({
-  category: z.enum(["skin", "face", "eyes", "nose", "lips", "other"]),
+  category: z.enum(["skin", "face", "eyes", "nose", "lips", "poster", "other"]),
   label: z.string().min(1, "请输入选项名称"),
   prompt: z.string().min(1, "请输入提示词"),
   description: z.string().optional(),
@@ -61,8 +61,11 @@ export function MedicalAestheticsConfig() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTerm, setEditingTerm] = useState<MedicalAestheticsTerm | null>(null);
-  const [deletingTerm, setDeletingTerm] = useState<MedicalAestheticsTerm | null>(null);
+  const [editingTerm, setEditingTerm] = useState<MedicalAestheticsTerm | null>(
+    null,
+  );
+  const [deletingTerm, setDeletingTerm] =
+    useState<MedicalAestheticsTerm | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<FormData>({
@@ -94,9 +97,10 @@ export function MedicalAestheticsConfig() {
   }, []);
 
   // 筛选后的数据
-  const filteredTerms = selectedCategory === "all"
-    ? terms
-    : terms.filter((term) => term.category === selectedCategory);
+  const filteredTerms =
+    selectedCategory === "all"
+      ? terms
+      : terms.filter((term) => term.category === selectedCategory);
 
   // 按类别分组
   const termsByCategory = MEDICAL_AESTHETICS_CATEGORIES.map((cat) => ({
