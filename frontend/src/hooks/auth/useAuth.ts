@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { useSetAtom } from "jotai";
 import { LoginCredentials } from "@/type/user";
 import { loginApi } from "@/api/user";
@@ -11,7 +11,7 @@ import { toast } from "sonner";
 export function useAuth() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  const navigate = useNavigate();
   const setToken = useSetAtom(tokenAtom);
   const setUserInfo = useSetAtom(userInfoAtom);
 
@@ -32,7 +32,7 @@ export function useAuth() {
         role: res.data.role,
       });
       toast.success("登录成功");
-      router.push(res.data.role === 2 ? "/admin" : "/");
+      navigate({ to: res.data.role === 2 ? "/admin" : "/" });
     } else {
       toast.error(res.msg);
       setError(res.msg || "登录失败");

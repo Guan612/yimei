@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { tokenAtom, userInfoAtom } from "@/store/auth";
 import { useRouteGuard } from "@/hooks/auth/useRouteGuard";
@@ -9,7 +8,7 @@ import { useRouteGuard } from "@/hooks/auth/useRouteGuard";
 export default function DashboardPage() {
   useRouteGuard();
 
-  const router = useRouter();
+  const navigate = useNavigate();
   const token = useAtomValue(tokenAtom);
   const userInfo = useAtomValue(userInfoAtom);
   const setToken = useSetAtom(tokenAtom);
@@ -18,7 +17,7 @@ export default function DashboardPage() {
   const handleLogout = () => {
     setToken(null);
     setUserInfo({ userId: 0, loginId: "", nickname: "", role: 0 });
-    router.push("/");
+    navigate({ to: "/" });
   };
 
   const services = [
@@ -77,7 +76,7 @@ export default function DashboardPage() {
       {/* Header */}
       <header className="relative z-10 border-b border-[var(--warm-gray-light)]/20 bg-white/60 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-8 py-4 flex justify-between items-center">
-          <Link href="/dashboard" className="flex items-center gap-3">
+          <Link to="/dashboard" className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--rose-gold)] to-[var(--rose-gold-light)] flex items-center justify-center">
               <span className="text-white text-lg font-light">A</span>
             </div>
@@ -127,7 +126,7 @@ export default function DashboardPage() {
           {services.map((service) => (
             <Link
               key={service.name}
-              href={service.href}
+              to={service.href}
               className="group card-elegant rounded-2xl p-10 bg-white"
             >
               <div className="flex flex-col gap-6">

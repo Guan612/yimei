@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import Link from 'next/link';
+import { Link } from "@tanstack/react-router";
 import { useAuth } from '@/hooks/auth/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -171,7 +171,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-12 pt-8 border-t border-[var(--neutral-200)]">
-            <Link href="/" className="flex items-center justify-center gap-2 text-sm text-[var(--neutral-500)] hover:text-[var(--brand-primary)] transition-colors">
+            <Link to="/" className="flex items-center justify-center gap-2 text-sm text-[var(--neutral-500)] hover:text-[var(--brand-primary)] transition-colors">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
               </svg>

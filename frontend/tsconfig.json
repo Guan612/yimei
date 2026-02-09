@@ -23,15 +23,6 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ],
-      "next/link": [
-        "./src/compat/next-link"
-      ],
-      "next/navigation": [
-        "./src/compat/next-navigation"
-      ],
-      "next/font/local": [
-        "./src/compat/next-font-local"
       ]
     }
   },

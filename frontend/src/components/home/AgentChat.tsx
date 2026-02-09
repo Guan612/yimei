@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 import { tokenAtom } from "@/store/auth";
 import { uploadFileApi, getFileUrlApi } from "@/api/upload";
@@ -24,7 +24,7 @@ const quickTags = [
 ];
 
 export function AgentChat() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const token = useAtomValue(tokenAtom);
   const [input, setInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -90,7 +90,7 @@ export function AgentChat() {
     if (hasUploading) return;
 
     if (!token) {
-      router.push("/login");
+      navigate({ to: "/login" });
       return;
     }
 
@@ -103,7 +103,7 @@ export function AgentChat() {
     }
     setPendingImages([]);
 
-    router.push(`/dashboard/chat?${params.toString()}`);
+    navigate({ to: `/dashboard/chat?${params.toString()}` });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

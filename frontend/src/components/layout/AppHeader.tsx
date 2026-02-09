@@ -1,7 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from 'jotai';
 import { tokenAtom, userInfoAtom } from '@/store/auth';
 
@@ -11,8 +10,8 @@ const navLinks = [
 ];
 
 export function AppHeader() {
-  const router = useRouter();
-  const pathname = usePathname();
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const token = useAtomValue(tokenAtom);
   const userInfo = useAtomValue(userInfoAtom);
   const setToken = useSetAtom(tokenAtom);
@@ -21,14 +20,14 @@ export function AppHeader() {
   const handleLogout = () => {
     setToken(null);
     setUserInfo({ userId: 0, loginId: '', nickname: '', role: 0 });
-    router.push('/');
+    navigate({ to: "/" });
   };
 
   return (
     <header className="border-b border-black/5 bg-white/80 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3">
+        <Link to="/" className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[var(--rose-gold)] to-[var(--rose-gold-light)] flex items-center justify-center">
             <span className="text-white text-sm font-light">A</span>
           </div>
@@ -45,7 +44,7 @@ export function AppHeader() {
               return (
                 <Link
                   key={link.href}
-                  href={link.href}
+                  to={link.href}
                   className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
                     isActive
                       ? 'text-[var(--rose-gold)] bg-[var(--rose-gold-pale)]'
@@ -64,7 +63,7 @@ export function AppHeader() {
             <div className="flex items-center gap-4">
               {userInfo.role === 2 && (
                 <Link
-                  href="/admin"
+                  to="/admin"
                   className="text-sm text-[var(--warm-gray)] hover:text-[var(--rose-gold)] transition-colors"
                 >
                   管理后台
@@ -82,7 +81,7 @@ export function AppHeader() {
             </div>
           ) : (
             <Link
-              href="/login"
+              to="/login"
               className="text-sm text-[var(--warm-gray)] hover:text-[var(--rose-gold)] transition-colors"
             >
               登录

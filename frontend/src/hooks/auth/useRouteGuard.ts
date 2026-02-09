@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 import { tokenAtom } from "@/store/auth";
 
@@ -18,8 +18,8 @@ import { tokenAtom } from "@/store/auth";
  * ```
  */
 export function useRouteGuard() {
-  const router = useRouter();
-  const pathname = usePathname();
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const token = useAtomValue(tokenAtom);
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -36,9 +36,9 @@ export function useRouteGuard() {
     if (!token) {
       // 保存当前路径，登录后可以跳转回来
       const loginUrl = `/login?from=${encodeURIComponent(pathname)}`;
-      router.replace(loginUrl);
+      navigate({ to: loginUrl, replace: true });
     }
-  }, [token, router, pathname, isHydrated]);
+  }, [token, navigate, pathname, isHydrated]);
 
   // 返回是否已认证
   return !!token;

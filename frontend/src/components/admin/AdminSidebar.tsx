@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { Wrench, Users, BarChart3, Boxes, ArrowLeft, Sparkles } from "lucide-react";
 
@@ -34,7 +33,7 @@ const navItems = [
 ];
 
 export function AdminSidebar() {
-  const pathname = usePathname();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
     <div className="w-64 border-r bg-muted/10 min-h-screen p-6">
@@ -51,7 +50,7 @@ export function AdminSidebar() {
           return (
             <Link
               key={item.href}
-              href={item.href}
+              to={item.href}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 active
@@ -68,7 +67,7 @@ export function AdminSidebar() {
 
       <div className="mt-8 pt-8 border-t">
         <Link
-          href="/"
+          to="/"
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />

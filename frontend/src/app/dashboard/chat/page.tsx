@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useState, useRef, useEffect, useCallback, Suspense, useMemo } from "react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { tokenAtom, userInfoAtom } from "@/store/auth";
 import {
@@ -65,8 +64,9 @@ function ImageProgress({ loading }: { loading: boolean }) {
 }
 
 function ChatPageContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const navigate = useNavigate();
+  const searchStr = useRouterState({ select: (s) => s.location.searchStr });
+  const searchParams = useMemo(() => new URLSearchParams(searchStr), [searchStr]);
   const token = useAtomValue(tokenAtom);
   const userInfo = useAtomValue(userInfoAtom);
   const setToken = useSetAtom(tokenAtom);
@@ -152,7 +152,7 @@ function ChatPageContent() {
       if (pendingImage?.uploading) return;
 
       if (!token) {
-        router.push("/login");
+        navigate({ to: "/login" });
         return;
       }
 
@@ -234,7 +234,7 @@ function ChatPageContent() {
         }
       );
     },
-    [input, streaming, token, messages, router, pendingImage]
+    [input, streaming, token, messages, navigate, pendingImage]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -322,7 +322,7 @@ function ChatPageContent() {
   const handleLogout = () => {
     setToken(null);
     setUserInfo({ userId: 0, loginId: "", nickname: "", role: 0 });
-    router.push("/");
+    navigate({ to: "/" });
   };
 
   const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -340,7 +340,7 @@ function ChatPageContent() {
       <header className="flex-shrink-0 border-b border-[var(--warm-gray-light)]/30 bg-white/80 backdrop-blur-md z-10">
         <div className="px-5 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--rose-gold)] to-[var(--rose-gold-light)] flex items-center justify-center">
                 <span className="text-white text-xs font-light">A</span>
               </div>
@@ -353,7 +353,7 @@ function ChatPageContent() {
           </div>
           <div className="flex items-center gap-4">
             <Link
-              href="/"
+              to="/"
               className="text-xs text-[var(--warm-gray)] hover:text-[var(--rose-gold)] transition-colors"
             >
               返回主页

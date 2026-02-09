@@ -1,9 +1,8 @@
-"use client";
+﻿"use client";
 
-import { useRouter } from "next/navigation";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { tokenAtom, userInfoAtom } from "@/store/auth";
-import Link from "next/link";
 import { AgentChat } from "@/components/home/AgentChat";
 
 const services = [
@@ -32,7 +31,7 @@ const services = [
 ];
 
 export default function Home() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const token = useAtomValue(tokenAtom);
   const userInfo = useAtomValue(userInfoAtom);
   const setToken = useSetAtom(tokenAtom);
@@ -41,7 +40,7 @@ export default function Home() {
   const handleLogout = () => {
     setToken(null);
     setUserInfo({ userId: 0, loginId: "", nickname: "", role: 0 });
-    router.push("/");
+    navigate({ to: "/" });
   };
 
   return (
@@ -72,7 +71,7 @@ export default function Home() {
             <div className="flex items-center gap-4">
               {userInfo.role !== 0 && (
                 <Link
-                  href="/admin"
+                  to="/admin"
                   className="text-sm text-[var(--warm-gray)] hover:text-[var(--rose-gold)] transition-colors"
                 >
                   管理后台
@@ -89,7 +88,7 @@ export default function Home() {
               </button>
             </div>
           ) : (
-            <Link href="/login" className="btn-outline text-xs">
+            <Link to="/login" className="btn-outline text-xs">
               进入系统
             </Link>
           )}
@@ -136,7 +135,7 @@ export default function Home() {
             {services.map((service, i) => (
               <Link
                 key={service.name}
-                href={service.href}
+                to={service.href}
                 className="group card-elegant rounded-2xl p-8 opacity-0 animate-fade-up"
                 style={{ animationDelay: `${0.5 + i * 0.1}s` }}
               >
