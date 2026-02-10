@@ -1,25 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { Link, useNavigate } from "@tanstack/react-router";
-import { useAtomValue, useSetAtom } from "jotai";
-import { tokenAtom, userInfoAtom } from "@/store/auth";
-import { useRouteGuard } from "@/hooks/auth/useRouteGuard";
+import { Link } from "@tanstack/react-router";
 
 function DashboardPage() {
-  useRouteGuard();
-
-  const navigate = useNavigate();
-  const token = useAtomValue(tokenAtom);
-  const userInfo = useAtomValue(userInfoAtom);
-  const setToken = useSetAtom(tokenAtom);
-  const setUserInfo = useSetAtom(userInfoAtom);
-
-  const handleLogout = () => {
-    setToken(null);
-    setUserInfo({ userId: 0, loginId: "", nickname: "", role: 0 });
-    navigate({ to: "/" });
-  };
-
   const services = [
     {
       name: "FaceSim",
@@ -68,40 +51,10 @@ function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[var(--cream)] relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
       {/* 装饰背景 */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[radial-gradient(circle,var(--rose-gold-pale)_0%,transparent_60%)] opacity-40 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[radial-gradient(circle,var(--sage-light)_0%,transparent_60%)] opacity-30 pointer-events-none" />
-
-      {/* Header */}
-      <header className="relative z-10 border-b border-[var(--warm-gray-light)]/20 bg-white/60 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-8 py-4 flex justify-between items-center">
-          <Link to="/dashboard" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--rose-gold)] to-[var(--rose-gold-light)] flex items-center justify-center">
-              <span className="text-white text-lg font-light">A</span>
-            </div>
-            <span className="text-xl tracking-[0.15em] text-[var(--charcoal)] font-light">
-              AESTHETI<span className="text-[var(--rose-gold)]">CORE</span>
-            </span>
-          </Link>
-
-          <div className="flex items-center gap-4">
-            {token && (
-              <>
-                <span className="text-sm text-[var(--warm-gray)]">
-                  {userInfo.nickname || userInfo.loginId}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="text-sm text-[var(--warm-gray)] hover:text-[var(--rose-gold)] transition-colors cursor-pointer"
-                >
-                  退出登录
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
 
       {/* Main Content */}
       <main className="relative z-10 max-w-6xl mx-auto px-8 py-16">
@@ -111,13 +64,10 @@ function DashboardPage() {
             Welcome Back
           </p>
           <h1 className="text-3xl font-light text-[var(--charcoal)]">
-            你好，
-            <span className="text-gradient">
-              {userInfo.nickname || userInfo.loginId || "用户"}
-            </span>
+            选择功能开始使用
           </h1>
           <p className="mt-2 text-[var(--warm-gray)]">
-            选择一个功能开始使用
+            从下面的服务卡片中选择一个功能
           </p>
         </div>
 
@@ -169,6 +119,6 @@ function DashboardPage() {
 }
 
 
-export const Route = createFileRoute("/dashboard/")({
+export const Route = createFileRoute("/_app/dashboard/")({
   component: DashboardPage,
 });

@@ -18,6 +18,6 @@ function AdminModelsPage() {
 }
 
 
-export const Route = createFileRoute("/admin/models")({
+export const Route = createFileRoute("/_app/admin/models")({
   component: AdminModelsPage,
 });

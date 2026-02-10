@@ -9,38 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as PosterGenRouteImport } from './routes/poster-gen'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as FacesimRouteImport } from './routes/facesim'
-import { Route as AdminRouteRouteImport } from './routes/admin/route'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
-import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as DashboardChatRouteImport } from './routes/dashboard/chat'
-import { Route as AdminUsersRouteImport } from './routes/admin/users'
-import { Route as AdminStatsRouteImport } from './routes/admin/stats'
-import { Route as AdminProvidersRouteImport } from './routes/admin/providers'
-import { Route as AdminModelsRouteImport } from './routes/admin/models'
-import { Route as AdminMedicalAestheticsRouteImport } from './routes/admin/medical-aesthetics'
+import { Route as AppPosterGenRouteImport } from './routes/_app/poster-gen'
+import { Route as AppFacesimRouteImport } from './routes/_app/facesim'
+import { Route as AppAdminRouteImport } from './routes/_app/admin'
+import { Route as AppDashboardIndexRouteImport } from './routes/_app/dashboard/index'
+import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
+import { Route as AppDashboardChatRouteImport } from './routes/_app/dashboard/chat'
+import { Route as AppAdminUsersRouteImport } from './routes/_app/admin/users'
+import { Route as AppAdminStatsRouteImport } from './routes/_app/admin/stats'
+import { Route as AppAdminProvidersRouteImport } from './routes/_app/admin/providers'
+import { Route as AppAdminModelsRouteImport } from './routes/_app/admin/models'
+import { Route as AppAdminMedicalAestheticsRouteImport } from './routes/_app/admin/medical-aesthetics'
 
-const PosterGenRoute = PosterGenRouteImport.update({
-  id: '/poster-gen',
-  path: '/poster-gen',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FacesimRoute = FacesimRouteImport.update({
-  id: '/facesim',
-  path: '/facesim',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRouteRoute = AdminRouteRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -48,99 +38,116 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardIndexRoute = DashboardIndexRouteImport.update({
+const AppPosterGenRoute = AppPosterGenRouteImport.update({
+  id: '/poster-gen',
+  path: '/poster-gen',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFacesimRoute = AppFacesimRouteImport.update({
+  id: '/facesim',
+  path: '/facesim',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardIndexRoute = AppDashboardIndexRouteImport.update({
   id: '/dashboard/',
   path: '/dashboard/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
-const AdminIndexRoute = AdminIndexRouteImport.update({
+const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AdminRouteRoute,
+  getParentRoute: () => AppAdminRoute,
 } as any)
-const DashboardChatRoute = DashboardChatRouteImport.update({
+const AppDashboardChatRoute = AppDashboardChatRouteImport.update({
   id: '/dashboard/chat',
   path: '/dashboard/chat',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
+const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
-  getParentRoute: () => AdminRouteRoute,
+  getParentRoute: () => AppAdminRoute,
 } as any)
-const AdminStatsRoute = AdminStatsRouteImport.update({
+const AppAdminStatsRoute = AppAdminStatsRouteImport.update({
   id: '/stats',
   path: '/stats',
-  getParentRoute: () => AdminRouteRoute,
+  getParentRoute: () => AppAdminRoute,
 } as any)
-const AdminProvidersRoute = AdminProvidersRouteImport.update({
+const AppAdminProvidersRoute = AppAdminProvidersRouteImport.update({
   id: '/providers',
   path: '/providers',
-  getParentRoute: () => AdminRouteRoute,
+  getParentRoute: () => AppAdminRoute,
 } as any)
-const AdminModelsRoute = AdminModelsRouteImport.update({
+const AppAdminModelsRoute = AppAdminModelsRouteImport.update({
   id: '/models',
   path: '/models',
-  getParentRoute: () => AdminRouteRoute,
+  getParentRoute: () => AppAdminRoute,
 } as any)
-const AdminMedicalAestheticsRoute = AdminMedicalAestheticsRouteImport.update({
-  id: '/medical-aesthetics',
-  path: '/medical-aesthetics',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
+const AppAdminMedicalAestheticsRoute =
+  AppAdminMedicalAestheticsRouteImport.update({
+    id: '/medical-aesthetics',
+    path: '/medical-aesthetics',
+    getParentRoute: () => AppAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteRouteWithChildren
-  '/facesim': typeof FacesimRoute
   '/login': typeof LoginRoute
-  '/poster-gen': typeof PosterGenRoute
-  '/admin/medical-aesthetics': typeof AdminMedicalAestheticsRoute
-  '/admin/models': typeof AdminModelsRoute
-  '/admin/providers': typeof AdminProvidersRoute
-  '/admin/stats': typeof AdminStatsRoute
-  '/admin/users': typeof AdminUsersRoute
-  '/dashboard/chat': typeof DashboardChatRoute
-  '/admin/': typeof AdminIndexRoute
-  '/dashboard/': typeof DashboardIndexRoute
+  '/admin': typeof AppAdminRouteWithChildren
+  '/facesim': typeof AppFacesimRoute
+  '/poster-gen': typeof AppPosterGenRoute
+  '/admin/medical-aesthetics': typeof AppAdminMedicalAestheticsRoute
+  '/admin/models': typeof AppAdminModelsRoute
+  '/admin/providers': typeof AppAdminProvidersRoute
+  '/admin/stats': typeof AppAdminStatsRoute
+  '/admin/users': typeof AppAdminUsersRoute
+  '/dashboard/chat': typeof AppDashboardChatRoute
+  '/admin/': typeof AppAdminIndexRoute
+  '/dashboard/': typeof AppDashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/facesim': typeof FacesimRoute
   '/login': typeof LoginRoute
-  '/poster-gen': typeof PosterGenRoute
-  '/admin/medical-aesthetics': typeof AdminMedicalAestheticsRoute
-  '/admin/models': typeof AdminModelsRoute
-  '/admin/providers': typeof AdminProvidersRoute
-  '/admin/stats': typeof AdminStatsRoute
-  '/admin/users': typeof AdminUsersRoute
-  '/dashboard/chat': typeof DashboardChatRoute
-  '/admin': typeof AdminIndexRoute
-  '/dashboard': typeof DashboardIndexRoute
+  '/facesim': typeof AppFacesimRoute
+  '/poster-gen': typeof AppPosterGenRoute
+  '/admin/medical-aesthetics': typeof AppAdminMedicalAestheticsRoute
+  '/admin/models': typeof AppAdminModelsRoute
+  '/admin/providers': typeof AppAdminProvidersRoute
+  '/admin/stats': typeof AppAdminStatsRoute
+  '/admin/users': typeof AppAdminUsersRoute
+  '/dashboard/chat': typeof AppDashboardChatRoute
+  '/admin': typeof AppAdminIndexRoute
+  '/dashboard': typeof AppDashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteRouteWithChildren
-  '/facesim': typeof FacesimRoute
+  '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
-  '/poster-gen': typeof PosterGenRoute
-  '/admin/medical-aesthetics': typeof AdminMedicalAestheticsRoute
-  '/admin/models': typeof AdminModelsRoute
-  '/admin/providers': typeof AdminProvidersRoute
-  '/admin/stats': typeof AdminStatsRoute
-  '/admin/users': typeof AdminUsersRoute
-  '/dashboard/chat': typeof DashboardChatRoute
-  '/admin/': typeof AdminIndexRoute
-  '/dashboard/': typeof DashboardIndexRoute
+  '/_app/admin': typeof AppAdminRouteWithChildren
+  '/_app/facesim': typeof AppFacesimRoute
+  '/_app/poster-gen': typeof AppPosterGenRoute
+  '/_app/admin/medical-aesthetics': typeof AppAdminMedicalAestheticsRoute
+  '/_app/admin/models': typeof AppAdminModelsRoute
+  '/_app/admin/providers': typeof AppAdminProvidersRoute
+  '/_app/admin/stats': typeof AppAdminStatsRoute
+  '/_app/admin/users': typeof AppAdminUsersRoute
+  '/_app/dashboard/chat': typeof AppDashboardChatRoute
+  '/_app/admin/': typeof AppAdminIndexRoute
+  '/_app/dashboard/': typeof AppDashboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/login'
     | '/admin'
     | '/facesim'
-    | '/login'
     | '/poster-gen'
     | '/admin/medical-aesthetics'
     | '/admin/models'
@@ -153,8 +160,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/facesim'
     | '/login'
+    | '/facesim'
     | '/poster-gen'
     | '/admin/medical-aesthetics'
     | '/admin/models'
@@ -167,39 +174,29 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/admin'
-    | '/facesim'
+    | '/_app'
     | '/login'
-    | '/poster-gen'
-    | '/admin/medical-aesthetics'
-    | '/admin/models'
-    | '/admin/providers'
-    | '/admin/stats'
-    | '/admin/users'
-    | '/dashboard/chat'
-    | '/admin/'
-    | '/dashboard/'
+    | '/_app/admin'
+    | '/_app/facesim'
+    | '/_app/poster-gen'
+    | '/_app/admin/medical-aesthetics'
+    | '/_app/admin/models'
+    | '/_app/admin/providers'
+    | '/_app/admin/stats'
+    | '/_app/admin/users'
+    | '/_app/dashboard/chat'
+    | '/_app/admin/'
+    | '/_app/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRouteRoute: typeof AdminRouteRouteWithChildren
-  FacesimRoute: typeof FacesimRoute
+  AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
-  PosterGenRoute: typeof PosterGenRoute
-  DashboardChatRoute: typeof DashboardChatRoute
-  DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/poster-gen': {
-      id: '/poster-gen'
-      path: '/poster-gen'
-      fullPath: '/poster-gen'
-      preLoaderRoute: typeof PosterGenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -207,18 +204,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/facesim': {
-      id: '/facesim'
-      path: '/facesim'
-      fullPath: '/facesim'
-      preLoaderRoute: typeof FacesimRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteRouteImport
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -228,95 +218,130 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/': {
-      id: '/dashboard/'
+    '/_app/poster-gen': {
+      id: '/_app/poster-gen'
+      path: '/poster-gen'
+      fullPath: '/poster-gen'
+      preLoaderRoute: typeof AppPosterGenRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/facesim': {
+      id: '/_app/facesim'
+      path: '/facesim'
+      fullPath: '/facesim'
+      preLoaderRoute: typeof AppFacesimRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dashboard/': {
+      id: '/_app/dashboard/'
       path: '/dashboard'
       fullPath: '/dashboard/'
-      preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppDashboardIndexRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/admin/': {
-      id: '/admin/'
+    '/_app/admin/': {
+      id: '/_app/admin/'
       path: '/'
       fullPath: '/admin/'
-      preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
+      preLoaderRoute: typeof AppAdminIndexRouteImport
+      parentRoute: typeof AppAdminRoute
     }
-    '/dashboard/chat': {
-      id: '/dashboard/chat'
+    '/_app/dashboard/chat': {
+      id: '/_app/dashboard/chat'
       path: '/dashboard/chat'
       fullPath: '/dashboard/chat'
-      preLoaderRoute: typeof DashboardChatRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppDashboardChatRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/admin/users': {
-      id: '/admin/users'
+    '/_app/admin/users': {
+      id: '/_app/admin/users'
       path: '/users'
       fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminUsersRouteImport
-      parentRoute: typeof AdminRouteRoute
+      preLoaderRoute: typeof AppAdminUsersRouteImport
+      parentRoute: typeof AppAdminRoute
     }
-    '/admin/stats': {
-      id: '/admin/stats'
+    '/_app/admin/stats': {
+      id: '/_app/admin/stats'
       path: '/stats'
       fullPath: '/admin/stats'
-      preLoaderRoute: typeof AdminStatsRouteImport
-      parentRoute: typeof AdminRouteRoute
+      preLoaderRoute: typeof AppAdminStatsRouteImport
+      parentRoute: typeof AppAdminRoute
     }
-    '/admin/providers': {
-      id: '/admin/providers'
+    '/_app/admin/providers': {
+      id: '/_app/admin/providers'
       path: '/providers'
       fullPath: '/admin/providers'
-      preLoaderRoute: typeof AdminProvidersRouteImport
-      parentRoute: typeof AdminRouteRoute
+      preLoaderRoute: typeof AppAdminProvidersRouteImport
+      parentRoute: typeof AppAdminRoute
     }
-    '/admin/models': {
-      id: '/admin/models'
+    '/_app/admin/models': {
+      id: '/_app/admin/models'
       path: '/models'
       fullPath: '/admin/models'
-      preLoaderRoute: typeof AdminModelsRouteImport
-      parentRoute: typeof AdminRouteRoute
+      preLoaderRoute: typeof AppAdminModelsRouteImport
+      parentRoute: typeof AppAdminRoute
     }
-    '/admin/medical-aesthetics': {
-      id: '/admin/medical-aesthetics'
+    '/_app/admin/medical-aesthetics': {
+      id: '/_app/admin/medical-aesthetics'
       path: '/medical-aesthetics'
       fullPath: '/admin/medical-aesthetics'
-      preLoaderRoute: typeof AdminMedicalAestheticsRouteImport
-      parentRoute: typeof AdminRouteRoute
+      preLoaderRoute: typeof AppAdminMedicalAestheticsRouteImport
+      parentRoute: typeof AppAdminRoute
     }
   }
 }
 
-interface AdminRouteRouteChildren {
-  AdminMedicalAestheticsRoute: typeof AdminMedicalAestheticsRoute
-  AdminModelsRoute: typeof AdminModelsRoute
-  AdminProvidersRoute: typeof AdminProvidersRoute
-  AdminStatsRoute: typeof AdminStatsRoute
-  AdminUsersRoute: typeof AdminUsersRoute
-  AdminIndexRoute: typeof AdminIndexRoute
+interface AppAdminRouteChildren {
+  AppAdminMedicalAestheticsRoute: typeof AppAdminMedicalAestheticsRoute
+  AppAdminModelsRoute: typeof AppAdminModelsRoute
+  AppAdminProvidersRoute: typeof AppAdminProvidersRoute
+  AppAdminStatsRoute: typeof AppAdminStatsRoute
+  AppAdminUsersRoute: typeof AppAdminUsersRoute
+  AppAdminIndexRoute: typeof AppAdminIndexRoute
 }
 
-const AdminRouteRouteChildren: AdminRouteRouteChildren = {
-  AdminMedicalAestheticsRoute: AdminMedicalAestheticsRoute,
-  AdminModelsRoute: AdminModelsRoute,
-  AdminProvidersRoute: AdminProvidersRoute,
-  AdminStatsRoute: AdminStatsRoute,
-  AdminUsersRoute: AdminUsersRoute,
-  AdminIndexRoute: AdminIndexRoute,
+const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminMedicalAestheticsRoute: AppAdminMedicalAestheticsRoute,
+  AppAdminModelsRoute: AppAdminModelsRoute,
+  AppAdminProvidersRoute: AppAdminProvidersRoute,
+  AppAdminStatsRoute: AppAdminStatsRoute,
+  AppAdminUsersRoute: AppAdminUsersRoute,
+  AppAdminIndexRoute: AppAdminIndexRoute,
 }
 
-const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
-  AdminRouteRouteChildren,
+const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
+  AppAdminRouteChildren,
 )
+
+interface AppRouteChildren {
+  AppAdminRoute: typeof AppAdminRouteWithChildren
+  AppFacesimRoute: typeof AppFacesimRoute
+  AppPosterGenRoute: typeof AppPosterGenRoute
+  AppDashboardChatRoute: typeof AppDashboardChatRoute
+  AppDashboardIndexRoute: typeof AppDashboardIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAdminRoute: AppAdminRouteWithChildren,
+  AppFacesimRoute: AppFacesimRoute,
+  AppPosterGenRoute: AppPosterGenRoute,
+  AppDashboardChatRoute: AppDashboardChatRoute,
+  AppDashboardIndexRoute: AppDashboardIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRouteRoute: AdminRouteRouteWithChildren,
-  FacesimRoute: FacesimRoute,
+  AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
-  PosterGenRoute: PosterGenRoute,
-  DashboardChatRoute: DashboardChatRoute,
-  DashboardIndexRoute: DashboardIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -18,6 +18,6 @@ function AdminProvidersPage() {
 }
 
 
-export const Route = createFileRoute("/admin/providers")({
+export const Route = createFileRoute("/_app/admin/providers")({
   component: AdminProvidersPage,
 });

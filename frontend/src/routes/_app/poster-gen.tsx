@@ -1,20 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { AppHeader } from '@/components/layout/AppHeader';
 import { GenerateForm } from '@/components/poster-gen/GenerateForm';
 import { ImagePreview } from '@/components/poster-gen/ImagePreview';
 import { GenerationHistory } from '@/components/poster-gen/GenerationHistory';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { useRouteGuard } from '@/hooks/auth/useRouteGuard';
 
 function PosterGenPage() {
-  useRouteGuard();
-
   return (
-    <div className="min-h-screen bg-[var(--cream)]">
-      <AppHeader />
-
+    <>
       {/* 页面标题 */}
       <section className="max-w-7xl mx-auto px-6 pt-10 pb-6">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--rose-gold-pale)] text-[var(--rose-gold)] text-sm mb-3">
@@ -52,11 +46,11 @@ function PosterGenPage() {
         <h2 className="text-xl font-light text-[var(--charcoal)] mb-6">生成历史</h2>
         <GenerationHistory />
       </section>
-    </div>
+    </>
   );
 }
 
 
-export const Route = createFileRoute("/poster-gen")({
+export const Route = createFileRoute("/_app/poster-gen")({
   component: PosterGenPage,
 });

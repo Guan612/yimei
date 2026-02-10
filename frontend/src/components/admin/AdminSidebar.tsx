@@ -7,27 +7,27 @@ import { Wrench, Users, BarChart3, Boxes, ArrowLeft, Sparkles } from "lucide-rea
 const navItems = [
   {
     title: "Provider配置",
-    href: "/admin/providers",
+    href: "/_app/admin/providers",
     icon: Wrench,
   },
   {
     title: "用户管理",
-    href: "/admin/users",
+    href: "/_app/admin/users",
     icon: Users,
   },
   {
     title: "生成统计",
-    href: "/admin/stats",
+    href: "/_app/admin/stats",
     icon: BarChart3,
   },
   {
     title: "模型管理",
-    href: "/admin/models",
+    href: "/_app/admin/models",
     icon: Boxes,
   },
   {
     title: "医美术语配置",
-    href: "/admin/medical-aesthetics",
+    href: "/_app/admin/medical-aesthetics",
     icon: Sparkles,
   },
 ];

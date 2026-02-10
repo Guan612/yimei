@@ -1,18 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { AppHeader } from '@/components/layout/AppHeader';
 import { FaceSimEditForm } from '@/components/facesim/FaceSimEditForm';
 import { SelectableImagePreview } from '@/components/facesim/SelectableImagePreview';
 import { Card } from '@/components/ui/card';
-import { useRouteGuard } from '@/hooks/auth/useRouteGuard';
 
 function FaceSimPage() {
-  useRouteGuard();
-
   return (
-    <div className="min-h-screen bg-[var(--cream)]">
-      <AppHeader />
-
+    <>
       {/* 页面标题 */}
       <section className="max-w-7xl mx-auto px-6 pt-10 pb-6">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--rose-gold-pale)] text-[var(--rose-gold)] text-sm mb-3">
@@ -43,11 +37,11 @@ function FaceSimPage() {
           </Card>
         </div>
       </section>
-    </div>
+    </>
   );
 }
 
 
-export const Route = createFileRoute("/facesim")({
+export const Route = createFileRoute("/_app/facesim")({
   component: FaceSimPage,
 });

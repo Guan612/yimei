@@ -18,6 +18,6 @@ function AdminMedicalAestheticsPage() {
 }
 
 
-export const Route = createFileRoute("/admin/medical-aesthetics")({
+export const Route = createFileRoute("/_app/admin/medical-aesthetics")({
   component: AdminMedicalAestheticsPage,
 });

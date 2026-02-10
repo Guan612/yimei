@@ -68,9 +68,6 @@ function ChatPageContent() {
   const searchStr = useRouterState({ select: (s) => s.location.searchStr });
   const searchParams = useMemo(() => new URLSearchParams(searchStr), [searchStr]);
   const token = useAtomValue(tokenAtom);
-  const userInfo = useAtomValue(userInfoAtom);
-  const setToken = useSetAtom(tokenAtom);
-  const setUserInfo = useSetAtom(userInfoAtom);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -335,47 +332,8 @@ function ChatPageContent() {
   const currentImage = images.find((img) => img.id === selectedImage);
 
   return (
-    <div className="h-screen flex flex-col bg-[var(--cream)]">
-      {/* Header */}
-      <header className="flex-shrink-0 border-b border-[var(--warm-gray-light)]/30 bg-white/80 backdrop-blur-md z-10">
-        <div className="px-5 py-2.5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--rose-gold)] to-[var(--rose-gold-light)] flex items-center justify-center">
-                <span className="text-white text-xs font-light">A</span>
-              </div>
-              <span className="text-sm tracking-[0.15em] text-[var(--charcoal)] font-light">
-                AESTHETI<span className="text-[var(--rose-gold)]">CORE</span>
-              </span>
-            </Link>
-            <span className="text-[var(--warm-gray-light)] text-xs">|</span>
-            <span className="text-xs text-[var(--warm-gray)]">AI 对话</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link
-              to="/"
-              className="text-xs text-[var(--warm-gray)] hover:text-[var(--rose-gold)] transition-colors"
-            >
-              返回主页
-            </Link>
-            {token && (
-              <>
-                <span className="text-xs text-[var(--warm-gray)]">
-                  {userInfo.nickname || userInfo.loginId}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="text-xs text-[var(--warm-gray)] hover:text-[var(--rose-gold)] transition-colors cursor-pointer"
-                >
-                  退出
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Main: Left Chat Sidebar + Right Canvas */}
+    <div className="h-screen flex overflow-hidden">
+      {/* Left Chat Sidebar + Right Canvas */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Chat Sidebar */}
         <div className="w-[380px] flex-shrink-0 flex flex-col border-r border-[var(--warm-gray-light)]/20 bg-white/60">
@@ -574,7 +532,7 @@ function ChatPageContent() {
         <div className="flex-1 flex flex-col min-w-0 bg-[var(--cream)]">
           {images.length === 0 && !currentImage ? (
             /* Empty Canvas State */
-            <div className="flex-1 flex items-center justify-center">
+            (<div className="flex-1 flex items-center justify-center">
               <div className="text-center space-y-4">
                 <div className="w-20 h-20 mx-auto rounded-2xl bg-white border border-[var(--warm-gray-light)]/20 shadow-sm flex items-center justify-center">
                   <svg className="w-10 h-10 text-[var(--rose-gold-light)]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
@@ -588,7 +546,7 @@ function ChatPageContent() {
                   </p>
                 </div>
               </div>
-            </div>
+            </div>)
           ) : (
             <>
               {/* Canvas Main Image */}
@@ -731,7 +689,6 @@ function ChatPageContent() {
           )}
         </div>
       </div>
-
       {/* Lightbox 图片放大弹窗 */}
       {lightboxUrl && (
         <div
@@ -753,7 +710,7 @@ function ChatPageContent() {
         </div>
       )}
     </div>
-  );
+  )
 }
 
 function ChatPage() {
@@ -774,6 +731,6 @@ function ChatPage() {
 }
 
 
-export const Route = createFileRoute("/dashboard/chat")({
-  component: ImageProgress,
+export const Route = createFileRoute("/_app/dashboard/chat")({
+  component: ChatPage,
 });

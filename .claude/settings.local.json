@@ -16,7 +16,8 @@
       "Bash(npx tsc --noEmit)",
       "WebSearch",
       "Bash(npm install react-markdown)",
-      "Bash(npx tsc --noEmit --pretty)"
+      "Bash(npx tsc --noEmit --pretty)",
+      "Bash(npm run dev:*)"
     ]
   }
 }
