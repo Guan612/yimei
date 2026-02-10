@@ -1,6 +1,25 @@
 import { useState, useEffect, useRef } from "react";
 import { getJobStatusApi, cancelJobApi } from "@/api/imagegen";
-import type { JobStatusResponse, ImageGenerationResponse } from "@/type/imagegen";
+import type {
+  JobStatusResponse,
+  ImageGenerationResponse,
+  NestedResultResponse
+} from "@/type/imagegen";
+
+/**
+ * 类型守卫：检查是否为嵌套响应结构
+ */
+function isNestedResult(
+  result: ImageGenerationResponse | NestedResultResponse<ImageGenerationResponse>
+): result is NestedResultResponse<ImageGenerationResponse> {
+  return (
+    typeof result === 'object' &&
+    result !== null &&
+    'success' in result &&
+    'data' in result &&
+    typeof (result as NestedResultResponse<ImageGenerationResponse>).success === 'boolean'
+  );
+}
 
 export interface UseJobPollingOptions {
   /** 轮询间隔（毫秒），默认 2000ms */
@@ -99,8 +118,8 @@ export function useJobPolling(
         }
         if (onComplete && status.result) {
           // 处理嵌套的响应结构 { success: true, data: {...} }
-          const result = (status.result as any)?.success && (status.result as any)?.data
-            ? (status.result as any).data
+          const result = isNestedResult(status.result) && status.result.success
+            ? status.result.data
             : status.result;
           console.log('[useJobPolling] Calling onComplete with result:', result);
           onComplete(result);
@@ -121,9 +140,9 @@ export function useJobPolling(
           onError(errorMsg);
         }
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('[useJobPolling] Error fetching status:', err);
-      const errorMsg = err.message || "查询任务状态失败";
+      const errorMsg = err instanceof Error ? err.message : "查询任务状态失败";
       setError(errorMsg);
       setIsPolling(false);
       if (timerRef.current) {
@@ -181,8 +200,9 @@ export function useJobPolling(
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
-    } catch (err: any) {
-      throw new Error(err.message || "取消任务失败");
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "取消任务失败";
+      throw new Error(errorMsg);
     }
   };
 

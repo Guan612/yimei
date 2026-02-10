@@ -63,12 +63,18 @@ export type JobStatus =
   | "delayed"
   | "paused";
 
+// 后端嵌套响应结构
+export interface NestedResultResponse<T> {
+  success: boolean;
+  data: T;
+}
+
 // 任务状态查询响应
 export interface JobStatusResponse {
   jobId: string;
   status: JobStatus;
   progress: number; // 0-100
-  result?: ImageGenerationResponse; // 完成时返回
+  result?: ImageGenerationResponse | NestedResultResponse<ImageGenerationResponse>; // 完成时返回，支持嵌套结构
   error?: string; // 失败时返回
   createdAt: string;
   processedAt?: string;
