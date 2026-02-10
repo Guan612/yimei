@@ -33,6 +33,20 @@ const EnvironmentVariablesSchema = z.object({
   AWS_REGION: z.string().default('us-east-1'),
   AWS_ACCESS_KEY_ID: z.string().min(1, 'AWS_ACCESS_KEY_ID 不能为空'),
   AWS_SECRET_ACCESS_KEY: z.string().min(1, 'AWS_SECRET_ACCESS_KEY 不能为空'),
+
+  // Redis 配置
+  REDIS_HOST: z.string().default('localhost'),
+  REDIS_PORT: z
+    .string()
+    .default('6379')
+    .transform((val) => parseInt(val, 10))
+    .pipe(z.number().min(1).max(65535)),
+  REDIS_PASSWORD: z.string().optional(),
+  REDIS_DB: z
+    .string()
+    .default('0')
+    .transform((val) => parseInt(val, 10))
+    .pipe(z.number().min(0).max(15)),
 });
 
 // 导出类型

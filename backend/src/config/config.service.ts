@@ -58,4 +58,14 @@ export class AppConfigService {
       }),
     };
   }
+
+  // Redis 配置
+  get redisConfig() {
+    return {
+      host: this.configService.get('REDIS_HOST', { infer: true }),
+      port: this.configService.get('REDIS_PORT', { infer: true }),
+      password: this.configService.get('REDIS_PASSWORD', { infer: true }),
+      db: this.configService.get('REDIS_DB', { infer: true }),
+    };
+  }
 }

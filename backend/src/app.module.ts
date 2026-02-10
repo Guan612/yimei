@@ -16,6 +16,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MedicalAestheticsModule } from './medical-aesthetics/medical-aesthetics.module';
 import { ChatModule } from './chat/chat.module';
 import { AiProviderModule } from './ai-provider/ai-provider.module';
+import { QueueModule } from './queue/queue.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { AiProviderModule } from './ai-provider/ai-provider.module';
       delimiter: '.',
       maxListeners: 20,
     }),
+    QueueModule,
     AppConfigModule,
     AiProviderModule,
     AuthModule,
