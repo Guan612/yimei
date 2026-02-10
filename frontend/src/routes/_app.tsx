@@ -6,7 +6,7 @@ function AppLayout() {
   useRouteGuard();
 
   return (
-    <div className="min-h-screen bg-[var(--cream)]">
+    <div className="min-h-screen bg-(--cream)">
       <AppHeader />
       <Outlet />
     </div>

@@ -2,32 +2,39 @@
 
 import { Link, useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
-import { Wrench, Users, BarChart3, Boxes, ArrowLeft, Sparkles } from "lucide-react";
+import {
+  Wrench,
+  Users,
+  BarChart3,
+  Boxes,
+  ArrowLeft,
+  Sparkles,
+} from "lucide-react";
 
 const navItems = [
   {
     title: "Provider配置",
-    href: "/_app/admin/providers",
+    href: "/admin/providers",
     icon: Wrench,
   },
   {
     title: "用户管理",
-    href: "/_app/admin/users",
+    href: "/admin/users",
     icon: Users,
   },
   {
     title: "生成统计",
-    href: "/_app/admin/stats",
+    href: "/admin/stats",
     icon: BarChart3,
   },
   {
     title: "模型管理",
-    href: "/_app/admin/models",
+    href: "/admin/models",
     icon: Boxes,
   },
   {
     title: "医美术语配置",
-    href: "/_app/admin/medical-aesthetics",
+    href: "/admin/medical-aesthetics",
     icon: Sparkles,
   },
 ];
