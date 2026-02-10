@@ -2,10 +2,14 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { SendMessageDto } from './dto/chat.dto';
 import { Response } from 'express';
 import { AiProviderService } from '../ai-provider/ai-provider.service';
 import { ChatMessage } from '../ai-provider/providers/base.provider';
+import { QUEUE_NAMES } from '../queue/constants';
+import { TextGenerationJobData } from '../queue/interfaces';
 
 const SYSTEM_PROMPT = `你是 AesthetiCore 医美智能助手，一位专业的医学美容顾问。你的职责：
 
@@ -39,7 +43,11 @@ const SYSTEM_PROMPT = `你是 AesthetiCore 医美智能助手，一位专业的�
 export class ChatService {
   private readonly logger = new Logger(ChatService.name);
 
-  constructor(private readonly aiProviderService: AiProviderService) {}
+  constructor(
+    private readonly aiProviderService: AiProviderService,
+    @InjectQueue(QUEUE_NAMES.TEXT_GENERATION)
+    private readonly textGenerationQueue: Queue<TextGenerationJobData>,
+  ) {}
 
   /**
    * SSE 流式发送消息
@@ -53,8 +61,62 @@ export class ChatService {
     );
 
     // 构建消息列表
+    const messages = this.buildMessages(dto);
+
+    // 设置 SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders();
+
+    try {
+      await provider.streamChat(messages, res);
+    } catch (error) {
+      this.logger.error('流式请求失败', error);
+      res.write(`data: ${JSON.stringify({ error: '请求失败，请稍后重试' })}\n\n`);
+    } finally {
+      res.write('data: [DONE]\n\n');
+      res.end();
+    }
+  }
+
+  /**
+   * 提交文本生成任务到队列（异步）
+   * 适用于不需要流式响应的场景
+   */
+  async sendMessage(dto: SendMessageDto, userId: number, systemPrompt?: string) {
+    this.logger.log(`提交文本生成任务到队列，用户 ${userId}`);
+
+    // 构建消息列表，支持动态注入系统提示词
+    const messages = this.buildMessages(dto, systemPrompt);
+
+    // 添加任务到队列
+    const job = await this.textGenerationQueue.add('chat-message', {
+      type: 'chat',
+      userId,
+      messages,
+    } as TextGenerationJobData, {
+      removeOnComplete: { age: 300, count: 100 },
+      removeOnFail: false,
+    });
+
+    this.logger.log(`任务已提交，Job ID: ${job.id}`);
+
+    return {
+      jobId: String(job.id),
+      message: '文本生成任务已提交，请使用 jobId 查询任务状态',
+    };
+  }
+
+  /**
+   * 构建消息列表
+   * @param dto 用户消息数据
+   * @param systemPrompt 可选的系统提示词，如果提供则覆盖默认的 SYSTEM_PROMPT
+   */
+  private buildMessages(dto: SendMessageDto, systemPrompt?: string): ChatMessage[] {
     const messages: ChatMessage[] = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: systemPrompt || SYSTEM_PROMPT },
     ];
 
     // 添加历史消息
@@ -89,22 +151,7 @@ export class ChatService {
       messages.push({ role: 'user', content: userText });
     }
 
-    // 设置 SSE headers
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.setHeader('X-Accel-Buffering', 'no');
-    res.flushHeaders();
-
-    try {
-      await provider.streamChat(messages, res);
-    } catch (error) {
-      this.logger.error('流式请求失败', error);
-      res.write(`data: ${JSON.stringify({ error: '请求失败，请稍后重试' })}\n\n`);
-    } finally {
-      res.write('data: [DONE]\n\n');
-      res.end();
-    }
+    return messages;
   }
 
   private buildContextHint(context?: string): string {

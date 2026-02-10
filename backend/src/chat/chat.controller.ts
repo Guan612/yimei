@@ -24,4 +24,13 @@ export class ChatController {
   ) {
     await this.chatService.sendMessageStream(dto, user.id, res);
   }
+
+  @Post('async')
+  asyncMessage(
+    @Body() dto: SendMessageDto,
+    @UserInfo() user: TokenDto,
+    @Res() res: Response,
+  ) {
+    return this.chatService.sendMessage(dto, user.id);
+  }
 }

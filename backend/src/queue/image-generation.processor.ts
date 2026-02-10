@@ -4,6 +4,10 @@ import { Job } from 'bullmq';
 import { QUEUE_NAMES } from './constants';
 import { ImageGenerationJobData, ImageGenerationJobResult } from './interfaces';
 import { ImageGenService } from '../image-gen/image-gen.service';
+import {
+  GenerateImageDto,
+  InpaintImageDto,
+} from '../image-gen/dto/generate-image.dto';
 
 @Processor(QUEUE_NAMES.IMAGE_GENERATION)
 export class ImageGenerationProcessor extends WorkerHost {
@@ -13,7 +17,7 @@ export class ImageGenerationProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<ImageGenerationJobData>): Promise<ImageGenerationJobResult> {
+  async process(job: Job<ImageGenerationJobData>) {
     this.logger.log(`开始处理图片生成任务 ${job.id}, 类型: ${job.data.type}`);
 
     try {
@@ -24,7 +28,7 @@ export class ImageGenerationProcessor extends WorkerHost {
       if (job.data.type === 'generate') {
         // 调用内部方法生成图片
         result = await this.imageGenService.generateImageInternal(
-          job.data.dto as any,
+          job.data.dto as GenerateImageDto,
           job.data.userId,
           async (progress: number) => {
             await job.updateProgress(progress);
@@ -33,7 +37,7 @@ export class ImageGenerationProcessor extends WorkerHost {
       } else if (job.data.type === 'inpaint') {
         // 调用内部方法进行 inpaint
         result = await this.imageGenService.inpaintInternal(
-          job.data.dto as any,
+          job.data.dto as InpaintImageDto,
           job.data.userId,
           async (progress: number) => {
             await job.updateProgress(progress);
@@ -53,7 +57,10 @@ export class ImageGenerationProcessor extends WorkerHost {
         data: result,
       };
     } catch (error) {
-      this.logger.error(`任务 ${job.id} 处理失败: ${error.message}`, error.stack);
+      this.logger.error(
+        `任务 ${job.id} 处理失败: ${error.message}`,
+        error.stack,
+      );
 
       return {
         success: false,

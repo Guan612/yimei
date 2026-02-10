@@ -4,7 +4,7 @@ import { z } from 'zod';
 const ChatMessageSchema = z.object({
   role: z.enum(['user', 'assistant']),
   content: z.string(),
-  imageUrls: z.array(z.string().url()).optional(),
+  imageUrls: z.array(z.url()).optional(),
 });
 
 const SendMessageSchema = z.object({
@@ -20,7 +20,7 @@ const SendMessageSchema = z.object({
     .default([])
     .describe('对话历史'),
   imageUrls: z
-    .array(z.string().url())
+    .array(z.url())
     .optional()
     .default([])
     .describe('用户上传的图片 URL 列表'),
