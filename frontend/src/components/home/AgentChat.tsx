@@ -103,7 +103,7 @@ export function AgentChat() {
     }
     setPendingImages([]);
 
-    navigate({ to: `/dashboard/chat?${params.toString()}` });
+    navigate({ to: `/chat?${params.toString()}` });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

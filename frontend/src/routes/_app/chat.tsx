@@ -1,37 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { useState, useRef, useEffect, useCallback, Suspense, useMemo } from "react";
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useState, useEffect, Suspense, useMemo, useRef, useCallback } from "react";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { tokenAtom, userInfoAtom } from "@/store/auth";
-import {
-  sendChatStream,
-  parseAction,
-  type ChatMessage,
-  type ChatAction,
-} from "@/api/chat";
-import { generateImgApi } from "@/api/imagegen";
-import { uploadFileApi, getFileUrlApi } from "@/api/upload";
-import type { ImageGenerationResponse } from "@/type/imagegen";
 import ReactMarkdown from "react-markdown";
+import {
+  useChatMessages,
+  useChatImageUpload,
+  useChatImageGeneration,
+  useChatInput,
+} from "@/hooks/chat";
+import { ChatAction } from "@/type/chat";
 
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  action?: ChatAction;
-  loading?: boolean;
-  imageUrls?: string[];
-  generatingImage?: boolean;
-  generatedImageUrl?: string;
-}
-
-interface GeneratedImage {
-  id: string;
-  url: string;
-  prompt: string;
-  loading?: boolean;
-}
 
 function ImageProgress({ loading }: { loading: boolean }) {
   const [progress, setProgress] = useState(0);
@@ -68,79 +49,105 @@ function ChatPageContent() {
   const searchStr = useRouterState({ select: (s) => s.location.searchStr });
   const searchParams = useMemo(() => new URLSearchParams(searchStr), [searchStr]);
   const token = useAtomValue(tokenAtom);
+  const setToken = useSetAtom(tokenAtom);
+  const setUserInfo = useSetAtom(userInfoAtom);
 
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [streaming, setStreaming] = useState(false);
-  const [images, setImages] = useState<GeneratedImage[]>([]);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [pendingImage, setPendingImage] = useState<{
-    file: File;
-    preview: string;
-    url?: string;
-    uploading: boolean;
-  } | null>(null);
-  const [generatingMsgIds, setGeneratingMsgIds] = useState<Set<string>>(new Set());
-  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const initialSent = useRef(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    // 重置 input 以便重复选择同一文件
-    e.target.value = "";
+  // 使用ref来存储updateMessage，避免循环依赖
+  const updateMessageRef = useRef<any>(null);
 
-    const preview = URL.createObjectURL(file);
-    setPendingImage({ file, preview, uploading: true });
-
-    try {
-      const fileId = await uploadFileApi(file);
-      const urlRes = await getFileUrlApi(fileId);
-      if (urlRes.code === 0 && urlRes.data) {
-        setPendingImage((prev) =>
-          prev ? { ...prev, url: urlRes.data!.url, uploading: false } : null
-        );
-      } else {
-        setPendingImage((prev) =>
-          prev ? { ...prev, uploading: false } : null
-        );
-      }
-    } catch {
-      setPendingImage((prev) =>
-        prev ? { ...prev, uploading: false } : null
-      );
+  // 图片生成完成回调
+  const onImageGenerated = useCallback((url: string, msgId?: string) => {
+    if (msgId && updateMessageRef.current) {
+      updateMessageRef.current(msgId, {
+        generatingImage: false,
+        generatedImageUrl: url,
+      });
     }
   }, []);
 
-  const removePendingImage = useCallback(() => {
-    if (pendingImage?.preview) {
-      URL.revokeObjectURL(pendingImage.preview);
-    }
-    setPendingImage(null);
-  }, [pendingImage]);
+  // 图片生成hook
+  const {
+    images,
+    selectedImage,
+    generatingMsgIds,
+    lightboxUrl,
+    setSelectedImage,
+    setLightboxUrl,
+    handleGenerateImage: generateImage,
+    currentImage,
+  } = useChatImageGeneration({
+    onImageGenerated,
+  });
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  // 消息完成回调
+  const onMessageComplete = useCallback(
+    (msg: any, action?: ChatAction) => {
+      // 自动触发生图
+      if (action && msg.id) {
+        const currentImageUrls = msg.imageUrls;
+        const actionWithImages: ChatAction =
+          currentImageUrls && currentImageUrls.length > 0
+            ? { ...action, imageUrls: currentImageUrls }
+            : action;
 
+        // 标记消息正在生成图片
+        if (updateMessageRef.current) {
+          updateMessageRef.current(msg.id, { generatingImage: true });
+        }
+
+        // 调用图片生成
+        generateImage(actionWithImages, msg.id);
+      }
+    },
+    [generateImage]
+  );
+
+  const onError = useCallback(
+    (error: string) => {
+      if (error === "请先登录") {
+        navigate({ to: "/login" });
+      }
+    },
+    [navigate]
+  );
+
+  // 使用消息管理hook
+  const {
+    messages,
+    streaming,
+    messagesEndRef,
+    handleSend: sendMessage,
+    updateMessage,
+  } = useChatMessages({
+    token,
+    onMessageComplete,
+    onError,
+  });
+
+  // 存储updateMessage到ref
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    updateMessageRef.current = updateMessage;
+  }, [updateMessage]);
 
-  useEffect(() => {
-    if (initialSent.current) return;
-    const q = searchParams.get("q");
-    const imgs = searchParams.get("imgs");
-    if (q && token) {
-      initialSent.current = true;
-      const imageUrls = imgs ? imgs.split(",").filter(Boolean) : undefined;
-      handleSend(q, imageUrls);
-    }
-  }, [searchParams, token]);
+  // 图片上传hook
+  const {
+    pendingImage,
+    fileInputRef,
+    handleImageSelect,
+    removePendingImage,
+    triggerFileSelect,
+  } = useChatImageUpload();
+
+  // 输入框hook
+  const {
+    input,
+    textareaRef,
+    handleTextareaInput,
+    createKeyDownHandler,
+    clearInput,
+  } = useChatInput();
 
   const handleSend = useCallback(
     async (text?: string, imageUrlsOverride?: string[]) => {
@@ -153,168 +160,33 @@ function ChatPageContent() {
         return;
       }
 
-      const currentImageUrls = imageUrlsOverride || (pendingImage?.url ? [pendingImage.url] : undefined);
+      const currentImageUrls =
+        imageUrlsOverride || (pendingImage?.url ? [pendingImage.url] : undefined);
 
-      const userMsg: Message = {
-        id: Date.now().toString(),
-        role: "user",
-        content: message,
-        imageUrls: currentImageUrls,
-      };
+      // 发送消息
+      await sendMessage(message, currentImageUrls);
 
-      const assistantMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: "",
-        loading: true,
-      };
-
-      setMessages((prev) => [...prev, userMsg, assistantMsg]);
-      if (!text) setInput("");
+      // 清理
+      if (!text) clearInput();
       if (pendingImage) {
         URL.revokeObjectURL(pendingImage.preview);
-        setPendingImage(null);
+        removePendingImage();
       }
-      setStreaming(true);
-
-      const history: ChatMessage[] = messages
-        .filter((m) => !m.loading)
-        .map((m) => ({
-          role: m.role,
-          content: m.content,
-          ...(m.imageUrls && m.imageUrls.length > 0 ? { imageUrls: m.imageUrls } : {}),
-        }));
-
-      let fullContent = "";
-
-      await sendChatStream(
-        { message, history, imageUrls: currentImageUrls },
-        (chunk) => {
-          fullContent += chunk;
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMsg.id
-                ? { ...m, content: fullContent, loading: false }
-                : m
-            )
-          );
-        },
-        () => {
-          const { cleanText, action } = parseAction(fullContent);
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMsg.id
-                ? { ...m, content: cleanText, action, loading: false }
-                : m
-            )
-          );
-          setStreaming(false);
-
-          // 自动触发生图
-          if (action) {
-            // 直接使用当前消息携带的图片（不依赖 LLM 返回 imageUrls）
-            const actionWithImages: ChatAction = currentImageUrls && currentImageUrls.length > 0
-              ? { ...action, imageUrls: currentImageUrls }
-              : action;
-            handleGenerateImage(actionWithImages, assistantMsg.id);
-          }
-        },
-        (err) => {
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMsg.id
-                ? { ...m, content: err || "请求失败，请稍后重试", loading: false }
-                : m
-            )
-          );
-          setStreaming(false);
-        }
-      );
     },
-    [input, streaming, token, messages, navigate, pendingImage]
+    [input, streaming, pendingImage, token, navigate, sendMessage, clearInput, removePendingImage]
   );
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+  // 初始URL参数处理
+  useEffect(() => {
+    if (initialSent.current) return;
+    const q = searchParams.get("q");
+    const imgs = searchParams.get("imgs");
+    if (q && token) {
+      initialSent.current = true;
+      const imageUrls = imgs ? imgs.split(",").filter(Boolean) : undefined;
+      handleSend(q, imageUrls);
     }
-  };
-
-  const handleGenerateImage = async (action: ChatAction, msgId?: string) => {
-    // 标记消息正在生图
-    if (msgId) {
-      setGeneratingMsgIds((prev) => new Set(prev).add(msgId));
-      setMessages((prev) =>
-        prev.map((m) => (m.id === msgId ? { ...m, generatingImage: true } : m))
-      );
-    }
-
-    try {
-      const req: { prompt: string; referenceImageUrl?: string; referenceImageBase64?: string; referenceImageMimeType?: string } = { prompt: action.prompt };
-      // 如果 action 带有用户上传的图片，前端下载转 base64 传给生图 API
-      if (action.imageUrls && action.imageUrls.length > 0) {
-        try {
-          const imgResp = await fetch(action.imageUrls[0]);
-          const blob = await imgResp.blob();
-          const mimeType = blob.type || "image/jpeg";
-          const arrayBuffer = await blob.arrayBuffer();
-          const base64 = btoa(
-            new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), "")
-          );
-          req.referenceImageBase64 = base64;
-          req.referenceImageMimeType = mimeType;
-        } catch {
-          // 下载失败则回退传 URL
-          req.referenceImageUrl = action.imageUrls[0];
-        }
-      }
-      const res = await generateImgApi(req);
-      if (res.code === 0 && res.data) {
-        const data = res.data as ImageGenerationResponse;
-        // 生图完成后才加入 images 数组并选中
-        const imgId = Date.now().toString();
-        const newImg: GeneratedImage = {
-          id: imgId,
-          url: data.imageUrl,
-          prompt: action.prompt,
-          loading: false,
-        };
-        setImages((prev) => [newImg, ...prev]);
-        setSelectedImage(imgId);
-        // 把生成的图片 URL 绑定到消息
-        if (msgId) {
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === msgId
-                ? { ...m, generatingImage: false, generatedImageUrl: data.imageUrl }
-                : m
-            )
-          );
-        }
-      } else {
-        if (msgId) {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === msgId ? { ...m, generatingImage: false } : m))
-          );
-        }
-      }
-    } catch {
-      if (msgId) {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === msgId ? { ...m, generatingImage: false } : m))
-        );
-      }
-    } finally {
-      if (msgId) {
-        setGeneratingMsgIds((prev) => {
-          const next = new Set(prev);
-          next.delete(msgId);
-          return next;
-        });
-      }
-    }
-  };
+  }, [searchParams, token, handleSend]);
 
   const handleLogout = () => {
     setToken(null);
@@ -322,21 +194,12 @@ function ChatPageContent() {
     navigate({ to: "/" });
   };
 
-  const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
-    const el = e.target;
-    el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 150) + "px";
-  };
-
-  const currentImage = images.find((img) => img.id === selectedImage);
-
   return (
-    <div className="h-screen flex overflow-hidden">
+    <div className="h-[calc(100vh-4rem)] flex overflow-hidden">
       {/* Left Chat Sidebar + Right Canvas */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Chat Sidebar */}
-        <div className="w-[380px] flex-shrink-0 flex flex-col border-r border-[var(--warm-gray-light)]/20 bg-white/60">
+        <div className="w-130 flex-shrink-0 flex flex-col border-r border-[var(--warm-gray-light)]/20 bg-white/60">
           {/* Chat Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
             {messages.length === 0 && (
@@ -488,7 +351,7 @@ function ChatPageContent() {
                 ref={textareaRef}
                 value={input}
                 onChange={handleTextareaInput}
-                onKeyDown={handleKeyDown}
+                onKeyDown={createKeyDownHandler(handleSend)}
                 placeholder="输入你的需求..."
                 rows={1}
                 className="w-full px-3 pt-2.5 pb-1.5 bg-transparent text-[var(--charcoal)] text-xs placeholder:text-[var(--warm-gray-light)] resize-none outline-none leading-relaxed"
@@ -731,6 +594,6 @@ function ChatPage() {
 }
 
 
-export const Route = createFileRoute("/_app/dashboard/chat")({
+export const Route = createFileRoute("/_app/chat")({
   component: ChatPage,
 });

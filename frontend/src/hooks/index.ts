@@ -15,3 +15,6 @@ export * from "./brandguard";
 
 // Auth模块hooks (已有)
 export * from "./auth";
+
+// Chat模块hooks
+export * from "./chat";

@@ -14,10 +14,10 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppPosterGenRouteImport } from './routes/_app/poster-gen'
 import { Route as AppFacesimRouteImport } from './routes/_app/facesim'
+import { Route as AppChatRouteImport } from './routes/_app/chat'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppDashboardIndexRouteImport } from './routes/_app/dashboard/index'
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
-import { Route as AppDashboardChatRouteImport } from './routes/_app/dashboard/chat'
 import { Route as AppAdminUsersRouteImport } from './routes/_app/admin/users'
 import { Route as AppAdminStatsRouteImport } from './routes/_app/admin/stats'
 import { Route as AppAdminProvidersRouteImport } from './routes/_app/admin/providers'
@@ -48,6 +48,11 @@ const AppFacesimRoute = AppFacesimRouteImport.update({
   path: '/facesim',
   getParentRoute: () => AppRoute,
 } as any)
+const AppChatRoute = AppChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminRoute = AppAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -62,11 +67,6 @@ const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppAdminRoute,
-} as any)
-const AppDashboardChatRoute = AppDashboardChatRouteImport.update({
-  id: '/dashboard/chat',
-  path: '/dashboard/chat',
-  getParentRoute: () => AppRoute,
 } as any)
 const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
   id: '/users',
@@ -99,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/admin': typeof AppAdminRouteWithChildren
+  '/chat': typeof AppChatRoute
   '/facesim': typeof AppFacesimRoute
   '/poster-gen': typeof AppPosterGenRoute
   '/admin/medical-aesthetics': typeof AppAdminMedicalAestheticsRoute
@@ -106,13 +107,13 @@ export interface FileRoutesByFullPath {
   '/admin/providers': typeof AppAdminProvidersRoute
   '/admin/stats': typeof AppAdminStatsRoute
   '/admin/users': typeof AppAdminUsersRoute
-  '/dashboard/chat': typeof AppDashboardChatRoute
   '/admin/': typeof AppAdminIndexRoute
   '/dashboard/': typeof AppDashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/chat': typeof AppChatRoute
   '/facesim': typeof AppFacesimRoute
   '/poster-gen': typeof AppPosterGenRoute
   '/admin/medical-aesthetics': typeof AppAdminMedicalAestheticsRoute
@@ -120,7 +121,6 @@ export interface FileRoutesByTo {
   '/admin/providers': typeof AppAdminProvidersRoute
   '/admin/stats': typeof AppAdminStatsRoute
   '/admin/users': typeof AppAdminUsersRoute
-  '/dashboard/chat': typeof AppDashboardChatRoute
   '/admin': typeof AppAdminIndexRoute
   '/dashboard': typeof AppDashboardIndexRoute
 }
@@ -130,6 +130,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/_app/admin': typeof AppAdminRouteWithChildren
+  '/_app/chat': typeof AppChatRoute
   '/_app/facesim': typeof AppFacesimRoute
   '/_app/poster-gen': typeof AppPosterGenRoute
   '/_app/admin/medical-aesthetics': typeof AppAdminMedicalAestheticsRoute
@@ -137,7 +138,6 @@ export interface FileRoutesById {
   '/_app/admin/providers': typeof AppAdminProvidersRoute
   '/_app/admin/stats': typeof AppAdminStatsRoute
   '/_app/admin/users': typeof AppAdminUsersRoute
-  '/_app/dashboard/chat': typeof AppDashboardChatRoute
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/dashboard/': typeof AppDashboardIndexRoute
 }
@@ -147,6 +147,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/admin'
+    | '/chat'
     | '/facesim'
     | '/poster-gen'
     | '/admin/medical-aesthetics'
@@ -154,13 +155,13 @@ export interface FileRouteTypes {
     | '/admin/providers'
     | '/admin/stats'
     | '/admin/users'
-    | '/dashboard/chat'
     | '/admin/'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
+    | '/chat'
     | '/facesim'
     | '/poster-gen'
     | '/admin/medical-aesthetics'
@@ -168,7 +169,6 @@ export interface FileRouteTypes {
     | '/admin/providers'
     | '/admin/stats'
     | '/admin/users'
-    | '/dashboard/chat'
     | '/admin'
     | '/dashboard'
   id:
@@ -177,6 +177,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/login'
     | '/_app/admin'
+    | '/_app/chat'
     | '/_app/facesim'
     | '/_app/poster-gen'
     | '/_app/admin/medical-aesthetics'
@@ -184,7 +185,6 @@ export interface FileRouteTypes {
     | '/_app/admin/providers'
     | '/_app/admin/stats'
     | '/_app/admin/users'
-    | '/_app/dashboard/chat'
     | '/_app/admin/'
     | '/_app/dashboard/'
   fileRoutesById: FileRoutesById
@@ -232,6 +232,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFacesimRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/chat': {
+      id: '/_app/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof AppChatRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/admin': {
       id: '/_app/admin'
       path: '/admin'
@@ -252,13 +259,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AppAdminIndexRouteImport
       parentRoute: typeof AppAdminRoute
-    }
-    '/_app/dashboard/chat': {
-      id: '/_app/dashboard/chat'
-      path: '/dashboard/chat'
-      fullPath: '/dashboard/chat'
-      preLoaderRoute: typeof AppDashboardChatRouteImport
-      parentRoute: typeof AppRoute
     }
     '/_app/admin/users': {
       id: '/_app/admin/users'
@@ -322,17 +322,17 @@ const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
 
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRouteWithChildren
+  AppChatRoute: typeof AppChatRoute
   AppFacesimRoute: typeof AppFacesimRoute
   AppPosterGenRoute: typeof AppPosterGenRoute
-  AppDashboardChatRoute: typeof AppDashboardChatRoute
   AppDashboardIndexRoute: typeof AppDashboardIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRouteWithChildren,
+  AppChatRoute: AppChatRoute,
   AppFacesimRoute: AppFacesimRoute,
   AppPosterGenRoute: AppPosterGenRoute,
-  AppDashboardChatRoute: AppDashboardChatRoute,
   AppDashboardIndexRoute: AppDashboardIndexRoute,
 }
 
