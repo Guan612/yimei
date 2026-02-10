@@ -10,6 +10,7 @@ import {
   type SelectionArea,
 } from "@/store/facesim";
 import { editImageApi } from "@/api/facesim";
+import { useJobPolling } from "@/hooks/common/useJobPolling";
 import { toast } from "sonner";
 import { medicalAestheticsListApi } from "@/api/medicalAesthetics";
 import { MedicalAestheticsTerm } from "@/type/medicalAesthetics";
@@ -24,6 +25,7 @@ export interface UseFaceSimEditFormReturn {
   selectedArea: ReturnType<typeof useAtomValue<typeof selectedAreaAtom>>;
   editPrompt: string;
   isProcessing: boolean;
+  progress: number;
   isDragging: boolean;
   selectedCategory: string;
   showTerms: boolean;
@@ -43,6 +45,7 @@ export interface UseFaceSimEditFormReturn {
   handleGenerate: () => Promise<void>;
   handleReset: () => void;
   handleSelectTerm: (term: MedicalAestheticsTerm) => void;
+  handleCancel: () => Promise<void>;
 
   // Computed
   filteredTerms: MedicalAestheticsTerm[];
@@ -65,6 +68,36 @@ export function useFaceSimEditForm(): UseFaceSimEditFormReturn {
   const [selectedCategory, setSelectedCategory] = useState<string>("skin");
   const [showTerms, setShowTerms] = useState(false);
   const [includeLocationInPrompt, setIncludeLocationInPrompt] = useState(true);
+
+  // 异步任务状态
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [progress, setProgress] = useState<number>(0);
+
+  // 使用轮询 hook
+  const { isPolling, cancelJob } = useJobPolling(jobId, {
+    interval: 2000,
+    onComplete: (result) => {
+      setEditedImage({
+        url: result.imageUrl,
+        timestamp: Date.now(),
+      });
+      setIsProcessing(false);
+      setProgress(100);
+      toast.success("图片编辑成功！");
+      setJobId(null);
+    },
+    onError: (errorMsg) => {
+      setError(errorMsg);
+      setIsProcessing(false);
+      toast.error("生成失败", {
+        description: errorMsg,
+      });
+      setJobId(null);
+    },
+    onProgress: (prog) => {
+      setProgress(prog);
+    },
+  });
 
   const getMedicalAestheticsTerm = async () => {
     const res = await medicalAestheticsListApi();
@@ -167,6 +200,7 @@ export function useFaceSimEditForm(): UseFaceSimEditFormReturn {
 
     setIsProcessing(true);
     setError(null);
+    setProgress(0);
 
     try {
       // 如果没有选择区域，使用整张图片作为默认选区
@@ -191,20 +225,18 @@ export function useFaceSimEditForm(): UseFaceSimEditFormReturn {
         prompt: fullPrompt,
       });
 
-      setEditedImage({
-        url: result.imageUrl,
-        timestamp: Date.now(),
+      // 设置 jobId，触发轮询
+      setJobId(result.jobId);
+      toast.success("任务已提交，正在处理中...", {
+        description: `任务ID: ${result.jobId}`,
       });
-
-      toast.success("图片编辑成功！");
     } catch (error: any) {
       const errorMsg = error.message || "编辑失败";
       setError(errorMsg);
-      toast.error("生成失败", {
+      setIsProcessing(false);
+      toast.error("提交失败", {
         description: errorMsg,
       });
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -213,6 +245,8 @@ export function useFaceSimEditForm(): UseFaceSimEditFormReturn {
     setEditedImage(null);
     setEditPrompt("");
     setError(null);
+    setJobId(null);
+    setProgress(0);
     toast.info("已重置");
   };
 
@@ -224,6 +258,16 @@ export function useFaceSimEditForm(): UseFaceSimEditFormReturn {
       return term.prompt;
     });
     toast.success(`已添加: ${term.label}`);
+  };
+
+  const handleCancel = async () => {
+    if (jobId) {
+      await cancelJob();
+      setIsProcessing(false);
+      setJobId(null);
+      setProgress(0);
+      toast.info("任务已取消");
+    }
   };
 
   const filteredTerms = medicalAestheticsTerm
@@ -239,7 +283,8 @@ export function useFaceSimEditForm(): UseFaceSimEditFormReturn {
     originalImage,
     selectedArea,
     editPrompt,
-    isProcessing,
+    isProcessing: isProcessing || isPolling,
+    progress,
     isDragging,
     selectedCategory,
     showTerms,
@@ -259,6 +304,7 @@ export function useFaceSimEditForm(): UseFaceSimEditFormReturn {
     handleGenerate,
     handleReset,
     handleSelectTerm,
+    handleCancel,
 
     // Computed
     filteredTerms,

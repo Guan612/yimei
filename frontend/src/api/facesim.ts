@@ -2,7 +2,7 @@ import { inpaintImgApi } from './imagegen';
 import { uploadFileApi, getFileUrlApi } from './upload';
 import { generateMask, blobToFile } from '@/utils/maskGenerator';
 import type { SelectionArea } from '@/store/facesim';
-import type { InpaintImageRequest, ImageGenerationResponse } from '@/type/imagegen';
+import type { InpaintImageRequest, JobSubmitResponse } from '@/type/imagegen';
 
 /**
  * FaceSim 图片编辑 API
@@ -21,19 +21,19 @@ export interface FaceSimEditParams {
 }
 
 /**
- * 编辑图片的完整流程
+ * 编辑图片的完整流程（返回 jobId）
  * 1. 上传原始图片
  * 2. 生成遮罩图
  * 3. 上传遮罩图
- * 4. 调用 inpaint API
- * 5. 获取结果图片 URL
+ * 4. 调用 inpaint API（异步任务）
+ * 5. 返回 jobId
  *
  * @param params 编辑参数
- * @returns 编辑结果
+ * @returns 任务提交响应
  */
 export async function editImageApi(
   params: FaceSimEditParams
-): Promise<ImageGenerationResponse> {
+): Promise<JobSubmitResponse> {
   const {
     imageFile,
     selection,
@@ -79,7 +79,7 @@ export async function editImageApi(
     const result = await inpaintImgApi(inpaintRequest);
 
     if (result.code !== 0 || !result.data) {
-      throw new Error(result.msg || '图片编辑失败');
+      throw new Error(result.msg || '图片编辑任务提交失败');
     }
 
     return result.data;

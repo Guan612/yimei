@@ -48,6 +48,33 @@ export interface ImageGenerationResponse {
   createdAt: string;
 }
 
+// 任务提交响应
+export interface JobSubmitResponse {
+  jobId: string;
+  message: string;
+}
+
+// 任务状态
+export type JobStatus =
+  | "waiting"
+  | "active"
+  | "completed"
+  | "failed"
+  | "delayed"
+  | "paused";
+
+// 任务状态查询响应
+export interface JobStatusResponse {
+  jobId: string;
+  status: JobStatus;
+  progress: number; // 0-100
+  result?: ImageGenerationResponse; // 完成时返回
+  error?: string; // 失败时返回
+  createdAt: string;
+  processedAt?: string;
+  finishedAt?: string;
+}
+
 export interface ImageGenerationHistory {
   id: number;
   userId: number;

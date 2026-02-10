@@ -1,14 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom } from "jotai";
 import {
   selectedProviderIdAtom,
-  isGeneratingAtom,
-  currentGeneratedImageAtom,
-  generationErrorAtom,
 } from "@/store/imageGen";
-import { generateImgApi } from "@/api/imagegen";
+import { useImageGeneration } from "@/hooks/poster-gen/useImageGeneration";
 import type { GenerateImageRequest } from "@/type/imagegen";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -23,9 +20,7 @@ import { medicalAestheticsListApi } from "@/api/medicalAesthetics";
 
 export function GenerateForm() {
   const [selectedProviderId] = useAtom(selectedProviderIdAtom);
-  const [isGenerating, setIsGenerating] = useAtom(isGeneratingAtom);
-  const setCurrentImage = useSetAtom(currentGeneratedImageAtom);
-  const setError = useSetAtom(generationErrorAtom);
+  const { generate, isGenerating, progress, cancel } = useImageGeneration();
   const [terms, setTerms] = useState<MedicalAestheticsTerm[]>([]);
   const [loadingTerms, setLoadingTerms] = useState(false);
 
@@ -105,46 +100,22 @@ export function GenerateForm() {
       return;
     }
 
-    setIsGenerating(true);
-    setError(null);
-    setCurrentImage(null);
+    const requestData: GenerateImageRequest = {
+      prompt: prompt.trim(),
+      negativePrompt: negativePrompt.trim() || undefined,
+      configId: selectedProviderId,
+      aspectRatio,
+      steps,
+      cfgScale,
+      ...(promptInjectIds.length > 0
+        ? {
+            promptInjectIds,
+            promptInjectPosition,
+          }
+        : {}),
+    };
 
-    try {
-      const requestData: GenerateImageRequest = {
-        prompt: prompt.trim(),
-        negativePrompt: negativePrompt.trim() || undefined,
-        configId: selectedProviderId,
-        aspectRatio,
-        steps,
-        cfgScale,
-        ...(promptInjectIds.length > 0
-          ? {
-              promptInjectIds,
-              promptInjectPosition,
-            }
-          : {}),
-      };
-
-      const res = await generateImgApi(requestData);
-
-      if (res.code !== 0 || !res.data) {
-        toast.error(res.msg);
-        return;
-      }
-
-      const result = res.data;
-
-      setCurrentImage(result);
-      toast.success("图片生成成功！");
-    } catch (error: any) {
-      const errorMsg = error.message || "图片生成失败";
-      setError(errorMsg);
-      toast.error("生成失败", {
-        description: errorMsg,
-      });
-    } finally {
-      setIsGenerating(false);
-    }
+    await generate(requestData);
   };
 
   return (
@@ -381,15 +352,36 @@ export function GenerateForm() {
         )}
       </div>
 
-      {/* 生成按钮 */}
-      <Button
-        onClick={handleGenerate}
-        disabled={isGenerating || !prompt.trim()}
-        className="w-full"
-        size="lg"
-      >
-        {isGenerating ? "生成中..." : "生成海报"}
-      </Button>
+      {/* 生成按钮和进度 */}
+      <div className="space-y-3">
+        <div className="flex gap-2">
+          <Button
+            onClick={handleGenerate}
+            disabled={isGenerating || !prompt.trim()}
+            className="flex-1"
+            size="lg"
+          >
+            {isGenerating ? `生成中 ${progress}%` : "生成海报"}
+          </Button>
+          {isGenerating && (
+            <Button
+              onClick={cancel}
+              variant="outline"
+              size="lg"
+            >
+              取消
+            </Button>
+          )}
+        </div>
+        {isGenerating && progress > 0 && (
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-primary h-2 rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

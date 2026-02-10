@@ -5,6 +5,8 @@ import type {
   ImageGenerationResponse,
   ImageGenerationHistory,
   ProviderConfig,
+  JobSubmitResponse,
+  JobStatusResponse,
 } from "@/type/imagegen";
 
 /**
@@ -12,17 +14,33 @@ import type {
  */
 
 /**
- * 生成图片（文生图）
+ * 生成图片（文生图）- 异步任务
  */
 export const generateImgApi = (data: GenerateImageRequest) => {
-  return api.post<ImageGenerationResponse>("/api/image-gen/generate", data);
+  return api.post<JobSubmitResponse>("/api/image-gen/generate", data);
 };
 
 /**
- * 图片局部修改（Inpainting）
+ * 图片局部修改（Inpainting）- 异步任务
  */
 export const inpaintImgApi = (data: InpaintImageRequest) => {
-  return api.post<ImageGenerationResponse>("/api/image-gen/inpaint", data);
+  return api.post<JobSubmitResponse>("/api/image-gen/inpaint", data);
+};
+
+/**
+ * 查询任务状态
+ */
+export const getJobStatusApi = (jobId: string) => {
+  return api.get<JobStatusResponse>(`/api/image-gen/job/${jobId}`);
+};
+
+/**
+ * 取消任务
+ */
+export const cancelJobApi = (jobId: string) => {
+  return api.post<{ message: string; jobId: string }>(
+    `/api/image-gen/job/${jobId}/cancel`,
+  );
 };
 
 /**
