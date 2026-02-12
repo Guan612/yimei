@@ -25,6 +25,7 @@ model User {
   aestheticSimulations AestheticSimulation[]
   imageGenerations     ImageGeneration[]
   chatSessions         ChatSession[]
+  medicalAesthetics    MedicalAesthetics[]
 }
 
 model File {
@@ -105,10 +106,13 @@ model ImageGeneration {
 
 model MedicalAesthetics {
   id          Int     @id @default(autoincrement())
-  category    String //skin,face,eyes,nose,lips,other
+  category    String //skin,face,eyes,nose,lips,poster,other
+  type        String  @default("user") //sys user
+  userId      Int
   label       String
   prompt      String
   description String?
+  user        User    @relation(fields: [userId], references: [id])
 }
 
 model ChatSession {

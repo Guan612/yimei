@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import {
   CreateMedicalAestheticDto,
   UpdateMedicalAestheticDto,
@@ -8,17 +12,33 @@ import { PrismaService } from 'src/prisma/prisma.service';
 @Injectable()
 export class MedicalAestheticsService {
   constructor(private prisma: PrismaService) {}
-  async create(createMedicalAestheticDto: CreateMedicalAestheticDto) {
+
+  async createPrompt(
+    createMedicalAestheticDto: CreateMedicalAestheticDto,
+    userId: number,
+  ) {
     const res = await this.prisma.medicalAesthetics.create({
-      data: createMedicalAestheticDto,
+      data: {
+        ...createMedicalAestheticDto,
+        userId,
+        type: 'sys',
+      },
     });
 
     return res;
   }
 
-  async findAll() {
-    const res = await this.prisma.medicalAesthetics.findMany();
-    return res;
+  async findAll(query?: { category?: string }) {
+    const category = query?.category;
+
+    // 兜底处理：防止 category 是 "" 或 "undefined"
+    const normalizedCategory =
+      category && category !== 'undefined' ? category : undefined;
+
+    return this.prisma.medicalAesthetics.findMany({
+      where: normalizedCategory ? { category: normalizedCategory } : undefined,
+      orderBy: { id: 'desc' }, // 你可以按需改
+    });
   }
 
   async findOne(id: number) {
@@ -56,6 +76,77 @@ export class MedicalAestheticsService {
 
     if (!existing) {
       throw new NotFoundException(`未找到ID为 ${id} 的配置`);
+    }
+
+    await this.prisma.medicalAesthetics.delete({
+      where: { id },
+    });
+  }
+
+  // 用户个人提示词管理
+  async createUserPrompt(
+    createMedicalAestheticDto: CreateMedicalAestheticDto,
+    userId: number,
+  ) {
+    const res = await this.prisma.medicalAesthetics.create({
+      data: {
+        ...createMedicalAestheticDto,
+        userId,
+        type: 'user',
+      },
+    });
+
+    return res;
+  }
+
+  async findUserPrompts(userId: number) {
+    const res = await this.prisma.medicalAesthetics.findMany({
+      where: {
+        userId: userId,
+      },
+      orderBy: {
+        id: 'desc',
+      },
+    });
+    return res;
+  }
+
+  async updateUserPrompt(
+    id: number,
+    userId: number,
+    updateMedicalAestheticDto: UpdateMedicalAestheticDto,
+  ) {
+    const existing = await this.prisma.medicalAesthetics.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`未找到ID为 ${id} 的提示词`);
+    }
+
+    if (existing.userId !== userId) {
+      throw new ForbiddenException('无权修改此提示词');
+    }
+
+    const res = await this.prisma.medicalAesthetics.update({
+      where: { id },
+      data: updateMedicalAestheticDto,
+    });
+
+    return res;
+  }
+
+  async removeUserPrompt(id: number, userId: number) {
+    const existing = await this.prisma.medicalAesthetics.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`未找到ID为 ${id} 的提示词`);
+    }
+
+    if (existing.userId !== userId) {
+      throw new ForbiddenException('无权删除此提示词');
     }
 
     await this.prisma.medicalAesthetics.delete({

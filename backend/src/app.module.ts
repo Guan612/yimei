@@ -17,6 +17,7 @@ import { MedicalAestheticsModule } from './medical-aesthetics/medical-aesthetics
 import { ChatModule } from './chat/chat.module';
 import { AiProviderModule } from './ai-provider/ai-provider.module';
 import { QueueModule } from './queue/queue.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { QueueModule } from './queue/queue.module';
     ImageGenModule,
     MedicalAestheticsModule,
     ChatModule,
+    ScheduleModule.forRoot()
   ],
   controllers: [],
   providers: [

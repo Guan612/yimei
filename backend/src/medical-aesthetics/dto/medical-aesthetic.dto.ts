@@ -10,10 +10,20 @@ const CreateMedicalAesthetiShema = z.object({
   description: z.string().optional(),
 });
 
+const QueryMedicalAesthetiShema = z.object({
+  category: z
+    .enum(['skin', 'face', 'eyes', 'nose', 'lips', 'poster', 'other'])
+    .optional(),
+});
+
 const UpdateMedicalAesthetiShema = CreateMedicalAesthetiShema.partial();
 
 export class CreateMedicalAestheticDto extends createZodDto(
   CreateMedicalAesthetiShema,
+) {}
+
+export class QueryMedicalAesthetiDto extends createZodDto(
+  QueryMedicalAesthetiShema,
 ) {}
 
 export class UpdateMedicalAestheticDto extends createZodDto(

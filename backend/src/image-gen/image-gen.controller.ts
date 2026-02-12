@@ -90,7 +90,6 @@ export class ImageGenController {
   }
 
   @Get('providers/list')
-  @Roles(Role.ADMIN)
   @ApiOperation({ summary: '获取所有可用的AI Provider配置列表' })
   async getAvailableProviders(): Promise<Result<any>> {
     const providers = await this.imageGenService.getAvailableProviders();
