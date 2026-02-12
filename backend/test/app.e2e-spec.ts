@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
@@ -19,6 +19,34 @@ import { validate } from '../src/config/env.validation';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { APP_PIPE, APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
+
+// Mock AppConfigService
+const mockAppConfigService = {
+  get nodeEnv() { return 'test'; },
+  get port() { return 0; },
+  get isDevelopment() { return false; },
+  get isProduction() { return false; },
+  get databaseUrl() { return 'postgresql://test:test@localhost:5432/test'; },
+  get jwtSecret() { return 'test-secret-key-for-jwt'; },
+  get jwtExpiresIn() { return '7d'; },
+  get s3Config() {
+    return {
+      endpoint: 'http://localhost:9000',
+      bucket: 'test-bucket',
+      region: 'us-east-1',
+      accessKeyId: 'test-key',
+      secretAccessKey: 'test-secret',
+    };
+  },
+  get redisConfig() {
+    return {
+      host: 'localhost',
+      port: 6379,
+      password: '',
+      db: 0,
+    };
+  },
+};
 
 // 在导入任何模块之前设置环境变量
 process.env.NODE_ENV = 'test';
@@ -53,7 +81,22 @@ describe('App (e2e)', () => {
       imports: [
         ConfigModule.forRoot({
           isGlobal: true,
-          validate,
+          validate: () => ({
+            NODE_ENV: 'test',
+            PORT: 0,
+            DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+            JWT_SECRET: 'test-secret-key-for-jwt',
+            JWT_EXPIRES_IN: '7d',
+            S3_ENDPOINT: 'http://localhost:9000',
+            S3_BUCKET: 'test-bucket',
+            AWS_REGION: 'us-east-1',
+            AWS_ACCESS_KEY_ID: 'test-key',
+            AWS_SECRET_ACCESS_KEY: 'test-secret',
+            REDIS_HOST: 'localhost',
+            REDIS_PORT: 6379,
+            REDIS_PASSWORD: '',
+            REDIS_DB: 0,
+          } as any),
           expandVariables: true,
         }),
         EventEmitterModule.forRoot({
@@ -89,6 +132,15 @@ describe('App (e2e)', () => {
         },
       ],
     })
+      .overrideProvider(AppConfigModule)
+      .useValue({
+        providers: [
+          {
+            provide: 'AppConfigService',
+            useValue: mockAppConfigService,
+          },
+        ],
+      } as any)
       .compile();
 
     app = moduleFixture.createNestApplication();
