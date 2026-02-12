@@ -120,7 +120,7 @@ export function FaceSimEditForm() {
         <div className="flex items-center justify-between">
           <Label htmlFor="editPrompt">编辑提示词*</Label>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => setShowTerms(!showTerms)}
             className="text-xs h-7"
@@ -140,7 +140,9 @@ export function FaceSimEditForm() {
 
             {/* 分类选择 */}
             <div className="flex gap-1.5 flex-wrap">
-              {MEDICAL_AESTHETICS_CATEGORIES.filter((cat) => cat.id !== "poster").map((cat) => (
+              {MEDICAL_AESTHETICS_CATEGORIES.filter(
+                (cat) => cat.id !== "poster",
+              ).map((cat) => (
                 <Button
                   key={cat.id}
                   variant={selectedCategory === cat.id ? "default" : "outline"}

@@ -1,98 +1,51 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import { useAtom } from "jotai";
-import {
-  selectedProviderIdAtom,
-} from "@/store/imageGen";
+import { selectedProviderIdAtom } from "@/store/imageGen";
 import { useImageGeneration } from "@/hooks/poster-gen/useImageGeneration";
+import { usePromptTerms } from "@/hooks/poster-gen/usePromptTerms";
+import { useGenerateFormState } from "@/hooks/poster-gen/useGenerateFormState";
 import type { GenerateImageRequest } from "@/type/imagegen";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ProviderSelector } from "./ProviderSelector";
-import {
-  MEDICAL_AESTHETICS_CATEGORIES,
-  MedicalAestheticsTerm,
-} from "@/type/medicalAesthetics";
-import { medicalAestheticsListApi } from "@/api/medicalAesthetics";
+import { MEDICAL_AESTHETICS_CATEGORIES } from "@/type/medicalAesthetics";
 
 export function GenerateForm() {
   const [selectedProviderId] = useAtom(selectedProviderIdAtom);
   const { generate, isGenerating, progress, cancel } = useImageGeneration();
-  const [terms, setTerms] = useState<MedicalAestheticsTerm[]>([]);
-  const [loadingTerms, setLoadingTerms] = useState(false);
 
-  const [prompt, setPrompt] = useState("");
-  const [negativePrompt, setNegativePrompt] = useState("");
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  // 提示词库管理
+  const {
+    filteredTerms,
+    loadingTerms,
+    promptInjectIds,
+    injectSearch,
+    setInjectSearch,
+    toggleInjectId,
+    clearSelection,
+    selectFiltered,
+  } = usePromptTerms();
 
-  const [promptInjectIds, setPromptInjectIds] = useState<number[]>([]);
-  const [promptInjectPosition, setPromptInjectPosition] = useState<
-    "prepend" | "append"
-  >("prepend");
-  const [injectCategory, setInjectCategory] = useState<string>("all");
-  const [injectSearch, setInjectSearch] = useState("");
-
-  // 高级选项
-  const [aspectRatio, setAspectRatio] = useState<
-    "1:1" | "16:9" | "9:16" | "4:3" | "3:4"
-  >("1:1");
-  const [steps, setSteps] = useState(30);
-  const [cfgScale, setCfgScale] = useState(7);
-
-  const filteredTerms = useMemo(() => {
-    const search = injectSearch.trim().toLowerCase();
-    return (terms || [])
-      .filter((t) =>
-        injectCategory === "all" ? true : t.category === injectCategory,
-      )
-      .filter((t) => {
-        if (!search) return true;
-        const hay = `${t.label ?? ""} ${t.prompt ?? ""} ${t.description ?? ""}`
-          .toLowerCase()
-          .trim();
-        return hay.includes(search);
-      })
-      .sort((a, b) => {
-        if (a.category !== b.category)
-          return a.category.localeCompare(b.category);
-        return (a.label || "").localeCompare(b.label || "");
-      });
-  }, [terms, injectCategory, injectSearch]);
-
-  useEffect(() => {
-    const loadTerms = async () => {
-      try {
-        setLoadingTerms(true);
-        const res = await medicalAestheticsListApi("poster");
-        if (res.code !== 0) {
-          toast.error(res.msg || "加载提示词库失败");
-          setTerms([]);
-          return;
-        }
-        setTerms((res.data as any) || []);
-      } catch (e: any) {
-        toast.error("加载提示词库失败", {
-          description: e?.message,
-        });
-      } finally {
-        setLoadingTerms(false);
-      }
-    };
-
-    loadTerms();
-  }, []);
-
-  const toggleInjectId = (id: number, checked: boolean) => {
-    setPromptInjectIds((prev) => {
-      const set = new Set(prev);
-      if (checked) set.add(id);
-      else set.delete(id);
-      return Array.from(set);
-    });
-  };
+  // 表单状态管理
+  const {
+    prompt,
+    setPrompt,
+    negativePrompt,
+    setNegativePrompt,
+    promptInjectPosition,
+    setPromptInjectPosition,
+    showAdvanced,
+    setShowAdvanced,
+    aspectRatio,
+    setAspectRatio,
+    steps,
+    setSteps,
+    cfgScale,
+    setCfgScale,
+  } = useGenerateFormState();
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -151,24 +104,6 @@ export function GenerateForm() {
         <div className="grid gap-3 rounded-lg border p-4">
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="injectCategory">类别</Label>
-              <select
-                id="injectCategory"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                value={injectCategory}
-                onChange={(e) => setInjectCategory(e.target.value)}
-                disabled={isGenerating}
-              >
-                <option value="all">全部</option>
-                {MEDICAL_AESTHETICS_CATEGORIES.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="injectPosition">注入位置</Label>
               <select
                 id="injectPosition"
@@ -200,7 +135,7 @@ export function GenerateForm() {
                 type="button"
                 variant="outline"
                 className="flex-1"
-                onClick={() => setPromptInjectIds([])}
+                onClick={clearSelection}
                 disabled={isGenerating || promptInjectIds.length === 0}
               >
                 清空已选
@@ -209,12 +144,7 @@ export function GenerateForm() {
                 type="button"
                 variant="outline"
                 className="flex-1"
-                onClick={() => {
-                  const ids = filteredTerms.map((t) => t.id);
-                  setPromptInjectIds(
-                    Array.from(new Set([...promptInjectIds, ...ids])),
-                  );
-                }}
+                onClick={selectFiltered}
                 disabled={isGenerating || filteredTerms.length === 0}
               >
                 全选当前筛选
@@ -266,8 +196,8 @@ export function GenerateForm() {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            勾选后后端会把所选 prompt 注入到 Prompt 前/后，并在生成记录的 metadata
-            中保存注入后的 finalPrompt 便于追溯。
+            勾选后后端会把所选 prompt 注入到 Prompt 前/后，并在生成记录的
+            metadata 中保存注入后的 finalPrompt 便于追溯。
           </p>
         </div>
       </div>
@@ -364,11 +294,7 @@ export function GenerateForm() {
             {isGenerating ? `生成中 ${progress}%` : "生成海报"}
           </Button>
           {isGenerating && (
-            <Button
-              onClick={cancel}
-              variant="outline"
-              size="lg"
-            >
+            <Button onClick={cancel} variant="outline" size="lg">
               取消
             </Button>
           )}

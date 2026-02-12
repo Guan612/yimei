@@ -1,65 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
-import { useAtom, useSetAtom } from "jotai";
-import {
-  generationHistoryAtom,
-  currentGeneratedImageAtom,
-} from "@/store/imageGen";
-import { getHistoryImgApi, getByIdImgApi } from "@/api/imagegen";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { useGenerationHistory } from "@/hooks/poster-gen";
 
 export function GenerationHistory() {
-  const [history, setHistory] = useAtom(generationHistoryAtom);
-  const setCurrentImage = useSetAtom(currentGeneratedImageAtom);
-
-  useEffect(() => {
-    loadHistory();
-  }, []);
-
-  const loadHistory = async () => {
-    try {
-      const res = await getHistoryImgApi(10, 0);
-      if (res.code === 0) {
-        toast.success("加载成功");
-        setHistory(res.data || []);
-      }
-    } catch (error: any) {
-      toast.error("加载历史记录失败", {
-        description: error.message,
-      });
-    }
-  };
-
-  const handleViewImage = async (historyItem: any) => {
-    try {
-      const { data, code, msg } = await getByIdImgApi(historyItem.id);
-
-      if (!data || code !== 0) {
-        toast.error(msg);
-        return;
-      }
-      const detail = data;
-      // 从detail构造currentImage格式
-      setCurrentImage({
-        id: detail.id,
-        imageUrl: detail.file.key, // 需要转换为完整URL
-        provider: detail.provider,
-        configId: 0, // 历史记录可能没有configId
-        model: detail.model,
-        createdAt: detail.createdAt,
-      });
-
-      // 滚动到顶部查看图片
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (error: any) {
-      toast.error("加载图片失败", {
-        description: error.message,
-      });
-    }
-  };
+  const { history, loadHistory, handleViewImage } = useGenerationHistory();
 
   if (history.length === 0) {
     return (
@@ -102,7 +48,11 @@ export function GenerationHistory() {
       ))}
 
       {history.length >= 10 && (
-        <Button variant="outline" className="w-full" onClick={loadHistory}>
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => loadHistory()}
+        >
           加载更多
         </Button>
       )}

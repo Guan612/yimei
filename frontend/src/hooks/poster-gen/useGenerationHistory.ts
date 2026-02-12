@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { useAtom } from "jotai";
-import { generationHistoryAtom } from "@/store/imageGen";
+import { useAtom, useSetAtom } from "jotai";
+import { generationHistoryAtom, currentGeneratedImageAtom } from "@/store/imageGen";
 import { getHistoryImgApi, getByIdImgApi } from "@/api/imagegen";
 import type { ImageGenerationHistory } from "@/type/imagegen";
 import { toast } from "sonner";
@@ -21,6 +21,8 @@ export interface UseGenerationHistoryReturn {
   ) => Promise<ImageGenerationHistory[] | null>;
   /** 查看详情 */
   viewDetail: (id: number) => Promise<ImageGenerationHistory | null>;
+  /** 查看并设置图片 */
+  handleViewImage: (historyItem: ImageGenerationHistory) => Promise<void>;
   /** 加载状态 */
   loading: boolean;
 }
@@ -32,22 +34,22 @@ export interface UseGenerationHistoryReturn {
  *
  * @example
  * ```tsx
- * const { history, loadHistory, viewDetail, loading } = useGenerationHistory();
+ * const { history, loadHistory, handleViewImage, loading } = useGenerationHistory();
  *
  * // 加载历史
  * useEffect(() => {
  *   loadHistory();
  * }, []);
  *
- * // 查看详情
- * const handleViewDetail = async (id: number) => {
- *   const detail = await viewDetail(id);
- *   console.log(detail);
+ * // 查看图片
+ * const onViewClick = (item: ImageGenerationHistory) => {
+ *   await handleViewImage(item);
  * };
  * ```
  */
 export function useGenerationHistory(): UseGenerationHistoryReturn {
   const [history, setHistory] = useAtom(generationHistoryAtom);
+  const setCurrentImage = useSetAtom(currentGeneratedImageAtom);
 
   const { execute: loadHistory, loading } = useAsyncOperation(
     async (limit: number = 20, offset: number = 0) => {
@@ -82,6 +84,37 @@ export function useGenerationHistory(): UseGenerationHistoryReturn {
     }
   );
 
+  /**
+   * 查看并设置图片到当前显示区域
+   */
+  const handleViewImage = async (historyItem: ImageGenerationHistory) => {
+    try {
+      const detail = await viewDetail(historyItem.id);
+
+      if (!detail) {
+        toast.error("加载图片失败");
+        return;
+      }
+
+      // 从detail构造currentImage格式
+      setCurrentImage({
+        id: detail.id,
+        imageUrl: detail.file.key,
+        provider: detail.provider,
+        configId: 0, // 历史记录可能没有configId
+        model: detail.model,
+        createdAt: detail.createdAt,
+      });
+
+      // 滚动到顶部查看图片
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error: any) {
+      toast.error("加载图片失败", {
+        description: error.message,
+      });
+    }
+  };
+
   // 组件挂载时加载历史记录
   useEffect(() => {
     if (history.length === 0) {
@@ -93,6 +126,7 @@ export function useGenerationHistory(): UseGenerationHistoryReturn {
     history,
     loadHistory,
     viewDetail,
+    handleViewImage,
     loading,
   };
 }

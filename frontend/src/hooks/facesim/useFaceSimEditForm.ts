@@ -100,7 +100,7 @@ export function useFaceSimEditForm(): UseFaceSimEditFormReturn {
   });
 
   const getMedicalAestheticsTerm = async () => {
-    const res = await medicalAestheticsListApi("poster");
+    const res = await medicalAestheticsListApi();
     if (res.code == 0 && res.data) {
       setMedicalAestheticsTermLsit(res.data);
     }
