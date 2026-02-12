@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useAtomValue, useSetAtom } from 'jotai';
-import { tokenAtom, userInfoAtom } from '@/store/auth';
+import { useAtomValue, useSetAtom } from "jotai";
+import { tokenAtom, userInfoAtom } from "@/store/auth";
 
 const navLinks = [
-  { href: '/facesim', label: 'FaceSim' },
-  { href: '/poster-gen', label: '海报生成' },
+  { href: "/facesim", label: "FaceSim" },
+  { href: "/poster-gen", label: "海报生成" },
 ];
 
 export function AppHeader() {
@@ -19,7 +19,7 @@ export function AppHeader() {
 
   const handleLogout = () => {
     setToken(null);
-    setUserInfo({ userId: 0, loginId: '', nickname: '', role: 0 });
+    setUserInfo({ userId: 0, loginId: "", nickname: "", role: 0 });
     navigate({ to: "/" });
   };
 
@@ -47,8 +47,8 @@ export function AppHeader() {
                   to={link.href}
                   className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
                     isActive
-                      ? 'text-[var(--rose-gold)] bg-[var(--rose-gold-pale)]'
-                      : 'text-[var(--warm-gray)] hover:text-[var(--charcoal)] hover:bg-black/[0.03]'
+                      ? "text-[var(--rose-gold)] bg-[var(--rose-gold-pale)]"
+                      : "text-[var(--warm-gray)] hover:text-[var(--charcoal)] hover:bg-black/[0.03]"
                   }`}
                 >
                   {link.label}
@@ -69,9 +69,12 @@ export function AppHeader() {
                   管理后台
                 </Link>
               )}
-              <span className="text-sm text-[var(--warm-gray)]">
+              <Link
+                to="/me"
+                className=" text-warm-gray px-3 py-1.5 rounded-md text-sm transition-colors hover:bg-black/[0.03]"
+              >
                 {userInfo.nickname || userInfo.loginId}
-              </span>
+              </Link>
               <button
                 onClick={handleLogout}
                 className="text-sm text-[var(--warm-gray)] hover:text-[var(--rose-gold)] transition-colors cursor-pointer"

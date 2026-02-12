@@ -100,7 +100,7 @@ export function useFaceSimEditForm(): UseFaceSimEditFormReturn {
   });
 
   const getMedicalAestheticsTerm = async () => {
-    const res = await medicalAestheticsListApi();
+    const res = await medicalAestheticsListApi("poster");
     if (res.code == 0 && res.data) {
       setMedicalAestheticsTermLsit(res.data);
     }
@@ -212,9 +212,10 @@ export function useFaceSimEditForm(): UseFaceSimEditFormReturn {
         height: 100,
       };
 
-      const selectionDesc = includeLocationInPrompt && selectedArea
-        ? getSelectionDescription(selectedArea)
-        : "";
+      const selectionDesc =
+        includeLocationInPrompt && selectedArea
+          ? getSelectionDescription(selectedArea)
+          : "";
       const fullPrompt = selectionDesc
         ? `${selectionDesc}。${editPrompt.trim()}`
         : editPrompt.trim();
@@ -271,7 +272,10 @@ export function useFaceSimEditForm(): UseFaceSimEditFormReturn {
   };
 
   const filteredTerms = medicalAestheticsTerm
-    ? medicalAestheticsTerm.filter((term) => term.category === selectedCategory && term.category !== "poster")
+    ? medicalAestheticsTerm.filter(
+        (term) =>
+          term.category === selectedCategory && term.category !== "poster",
+      )
     : [];
 
   return {

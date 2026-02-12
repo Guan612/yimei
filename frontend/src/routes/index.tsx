@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-﻿"use client";
+("use client");
 
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -14,8 +14,18 @@ const services = [
     description: "上传照片，AI 智能分析面部特征，实时预览祛痘、祛斑等术后效果",
     href: "/facesim",
     icon: (
-      <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+      <svg
+        className="w-8 h-8"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"
+        />
       </svg>
     ),
   },
@@ -25,8 +35,18 @@ const services = [
     description: "一键生成符合品牌 VI 的营销海报，内置违禁词检测，合规无忧",
     href: "/poster-gen",
     icon: (
-      <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
+      <svg
+        className="w-8 h-8"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42"
+        />
       </svg>
     ),
   },
@@ -53,7 +73,10 @@ function Home() {
 
       {/* 装饰圆环 */}
       <div className="absolute top-[20%] right-[10%] w-[300px] h-[300px] border border-[var(--rose-gold-light)] rounded-full opacity-20 animate-float pointer-events-none" />
-      <div className="absolute bottom-[30%] left-[5%] w-[200px] h-[200px] border border-[var(--gold-accent)] rounded-full opacity-15 animate-float pointer-events-none" style={{ animationDelay: '2s' }} />
+      <div
+        className="absolute bottom-[30%] left-[5%] w-[200px] h-[200px] border border-[var(--gold-accent)] rounded-full opacity-15 animate-float pointer-events-none"
+        style={{ animationDelay: "2s" }}
+      />
 
       {/* Header */}
       <header className="relative z-10 py-8">
@@ -66,7 +89,9 @@ function Home() {
               <span className="text-2xl tracking-[0.2em] text-[var(--charcoal)] font-light">
                 AESTHETI<span className="text-[var(--rose-gold)]">CORE</span>
               </span>
-              <p className="text-[10px] tracking-[0.3em] text-[var(--warm-gray)] uppercase">Medical Aesthetics Intelligence</p>
+              <p className="text-[10px] tracking-[0.3em] text-[var(--warm-gray)] uppercase">
+                Medical Aesthetics Intelligence
+              </p>
             </div>
           </div>
           {token ? (
@@ -79,9 +104,12 @@ function Home() {
                   管理后台
                 </Link>
               )}
-              <span className="text-sm text-[var(--warm-gray)]">
+              <Link
+                to="/me"
+                className=" text-warm-gray px-3 py-1.5 rounded-md text-sm transition-colors hover:bg-black/[0.03]"
+              >
                 {userInfo.nickname || userInfo.loginId}
-              </span>
+              </Link>
               <button
                 onClick={handleLogout}
                 className="text-sm text-[var(--warm-gray)] hover:text-[var(--rose-gold)] transition-colors cursor-pointer"
@@ -103,7 +131,9 @@ function Home() {
           {/* 标题区域 - 居中 */}
           <div className="text-center space-y-4 mb-10">
             <div className="space-y-2 opacity-0 animate-fade-up">
-              <p className="text-[var(--rose-gold)] text-sm tracking-[0.3em] uppercase">AI-Powered Beauty</p>
+              <p className="text-[var(--rose-gold)] text-sm tracking-[0.3em] uppercase">
+                AI-Powered Beauty
+              </p>
               <div className="line-elegant mx-auto"></div>
             </div>
 
@@ -128,8 +158,12 @@ function Home() {
       <section id="services" className="relative z-10 py-24 bg-white/50">
         <div className="max-w-6xl mx-auto px-8">
           <div className="text-center mb-16 space-y-4">
-            <p className="text-[var(--rose-gold)] text-sm tracking-[0.3em] uppercase">Our Services</p>
-            <h2 className="text-3xl font-light text-[var(--charcoal)]">核心功能</h2>
+            <p className="text-[var(--rose-gold)] text-sm tracking-[0.3em] uppercase">
+              Our Services
+            </p>
+            <h2 className="text-3xl font-light text-[var(--charcoal)]">
+              核心功能
+            </h2>
             <div className="line-elegant mx-auto"></div>
           </div>
 
@@ -150,12 +184,26 @@ function Home() {
                       <h3 className="text-xl text-[var(--charcoal)] group-hover:text-[var(--rose-gold)] transition-colors">
                         {service.name}
                       </h3>
-                      <svg className="w-4 h-4 text-[var(--warm-gray-light)] group-hover:text-[var(--rose-gold)] group-hover:translate-x-2 transition-all duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
+                      <svg
+                        className="w-4 h-4 text-[var(--warm-gray-light)] group-hover:text-[var(--rose-gold)] group-hover:translate-x-2 transition-all duration-300"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"
+                        />
                       </svg>
                     </div>
-                    <p className="text-sm text-[var(--rose-gold-light)]">{service.subtitle}</p>
-                    <p className="text-[var(--warm-gray)] text-sm leading-relaxed">{service.description}</p>
+                    <p className="text-sm text-[var(--rose-gold-light)]">
+                      {service.subtitle}
+                    </p>
+                    <p className="text-[var(--warm-gray)] text-sm leading-relaxed">
+                      {service.description}
+                    </p>
                   </div>
                 </div>
               </Link>
@@ -168,7 +216,9 @@ function Home() {
       <footer className="relative z-10 py-12 border-t border-[var(--warm-gray-light)]/20">
         <div className="max-w-6xl mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-3">
-            <span className="text-sm tracking-[0.2em] text-[var(--warm-gray)]">AESTHETICORE</span>
+            <span className="text-sm tracking-[0.2em] text-[var(--warm-gray)]">
+              AESTHETICORE
+            </span>
             <span className="text-[var(--warm-gray-light)]">·</span>
             <span className="text-sm text-[var(--warm-gray)]">© 2026</span>
           </div>
@@ -184,7 +234,6 @@ function Home() {
     </div>
   );
 }
-
 
 export const Route = createFileRoute("/")({
   component: Home,

@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppPosterGenRouteImport } from './routes/_app/poster-gen'
+import { Route as AppMeRouteImport } from './routes/_app/me'
 import { Route as AppFacesimRouteImport } from './routes/_app/facesim'
 import { Route as AppChatRouteImport } from './routes/_app/chat'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
@@ -41,6 +42,11 @@ const IndexRoute = IndexRouteImport.update({
 const AppPosterGenRoute = AppPosterGenRouteImport.update({
   id: '/poster-gen',
   path: '/poster-gen',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMeRoute = AppMeRouteImport.update({
+  id: '/me',
+  path: '/me',
   getParentRoute: () => AppRoute,
 } as any)
 const AppFacesimRoute = AppFacesimRouteImport.update({
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AppAdminRouteWithChildren
   '/chat': typeof AppChatRoute
   '/facesim': typeof AppFacesimRoute
+  '/me': typeof AppMeRoute
   '/poster-gen': typeof AppPosterGenRoute
   '/admin/medical-aesthetics': typeof AppAdminMedicalAestheticsRoute
   '/admin/models': typeof AppAdminModelsRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/chat': typeof AppChatRoute
   '/facesim': typeof AppFacesimRoute
+  '/me': typeof AppMeRoute
   '/poster-gen': typeof AppPosterGenRoute
   '/admin/medical-aesthetics': typeof AppAdminMedicalAestheticsRoute
   '/admin/models': typeof AppAdminModelsRoute
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/chat': typeof AppChatRoute
   '/_app/facesim': typeof AppFacesimRoute
+  '/_app/me': typeof AppMeRoute
   '/_app/poster-gen': typeof AppPosterGenRoute
   '/_app/admin/medical-aesthetics': typeof AppAdminMedicalAestheticsRoute
   '/_app/admin/models': typeof AppAdminModelsRoute
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/chat'
     | '/facesim'
+    | '/me'
     | '/poster-gen'
     | '/admin/medical-aesthetics'
     | '/admin/models'
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/chat'
     | '/facesim'
+    | '/me'
     | '/poster-gen'
     | '/admin/medical-aesthetics'
     | '/admin/models'
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '/_app/admin'
     | '/_app/chat'
     | '/_app/facesim'
+    | '/_app/me'
     | '/_app/poster-gen'
     | '/_app/admin/medical-aesthetics'
     | '/_app/admin/models'
@@ -223,6 +235,13 @@ declare module '@tanstack/react-router' {
       path: '/poster-gen'
       fullPath: '/poster-gen'
       preLoaderRoute: typeof AppPosterGenRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/me': {
+      id: '/_app/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof AppMeRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/facesim': {
@@ -324,6 +343,7 @@ interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRouteWithChildren
   AppChatRoute: typeof AppChatRoute
   AppFacesimRoute: typeof AppFacesimRoute
+  AppMeRoute: typeof AppMeRoute
   AppPosterGenRoute: typeof AppPosterGenRoute
   AppDashboardIndexRoute: typeof AppDashboardIndexRoute
 }
@@ -332,6 +352,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRouteWithChildren,
   AppChatRoute: AppChatRoute,
   AppFacesimRoute: AppFacesimRoute,
+  AppMeRoute: AppMeRoute,
   AppPosterGenRoute: AppPosterGenRoute,
   AppDashboardIndexRoute: AppDashboardIndexRoute,
 }

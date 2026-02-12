@@ -66,7 +66,7 @@ export function GenerateForm() {
     const loadTerms = async () => {
       try {
         setLoadingTerms(true);
-        const res = await medicalAestheticsListApi();
+        const res = await medicalAestheticsListApi("poster");
         if (res.code !== 0) {
           toast.error(res.msg || "加载提示词库失败");
           setTerms([]);
