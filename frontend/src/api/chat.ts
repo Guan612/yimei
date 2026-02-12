@@ -1,18 +1,13 @@
-import { ChatAction, SendChatDto } from '@/type/chat';
-const API_BASE_URL =
-  (import.meta as ImportMeta & { env: Record<string, string | undefined> }).env
-    .VITE_API_URL ||
-  (import.meta as ImportMeta & { env: Record<string, string | undefined> }).env
-    .NEXT_PUBLIC_API_URL ||
-  'http://localhost:8010'
+import { ChatAction, SendChatDto } from "@/type/chat";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8010";
 
 /**
  * 获取 token（复用统一逻辑）
  */
 function getAuthToken(): string {
-  if (typeof window === 'undefined') return '';
-  const token = localStorage.getItem('auth_token');
-  if (!token) return '';
+  if (typeof window === "undefined") return "";
+  const token = localStorage.getItem("auth_token");
+  if (!token) return "";
   return token.startsWith('"') ? JSON.parse(token) : token;
 }
 
@@ -27,42 +22,42 @@ export async function sendChatStream(
 ) {
   try {
     const response = await fetch(`${API_BASE_URL}/api/chat/stream`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         Authorization: `Bearer ${getAuthToken()}`,
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      onError('请求失败，请稍后重试');
+      onError("请求失败，请稍后重试");
       return;
     }
 
     const reader = response.body?.getReader();
     if (!reader) {
-      onError('浏览器不支持流式读取');
+      onError("浏览器不支持流式读取");
       return;
     }
 
     const decoder = new TextDecoder();
-    let buffer = '';
+    let buffer = "";
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
 
       for (const line of lines) {
         const trimmed = line.trim();
-        if (!trimmed || !trimmed.startsWith('data: ')) continue;
+        if (!trimmed || !trimmed.startsWith("data: ")) continue;
         const data = trimmed.slice(6);
 
-        if (data === '[DONE]') {
+        if (data === "[DONE]") {
           onDone();
           return;
         }
@@ -84,14 +79,17 @@ export async function sendChatStream(
 
     onDone();
   } catch {
-    onError('网络错误，请检查网络连接后重试');
+    onError("网络错误，请检查网络连接后重试");
   }
 }
 
 /**
  * 从 AI 回复中解析 ACTION 标记
  */
-export function parseAction(text: string): { cleanText: string; action?: ChatAction } {
+export function parseAction(text: string): {
+  cleanText: string;
+  action?: ChatAction;
+} {
   const actionRegex = /<!--ACTION:([\s\S]*?)-->/;
   const match = text.match(actionRegex);
 
@@ -101,7 +99,7 @@ export function parseAction(text: string): { cleanText: string; action?: ChatAct
 
   try {
     const action = JSON.parse(match[1]) as ChatAction;
-    const cleanText = text.replace(actionRegex, '').trim();
+    const cleanText = text.replace(actionRegex, "").trim();
     return { cleanText, action };
   } catch {
     return { cleanText: text };
@@ -113,19 +111,19 @@ export function parseAction(text: string): { cleanText: string; action?: ChatAct
  */
 export async function createSession(data: {
   title?: string;
-  context?: 'facesim' | 'poster' | 'general';
+  context?: "facesim" | "poster" | "general";
 }) {
   const response = await fetch(`${API_BASE_URL}/api/chat/sessions`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${getAuthToken()}`,
     },
     body: JSON.stringify(data),
   });
 
   if (!response.ok) {
-    throw new Error('创建会话失败');
+    throw new Error("创建会话失败");
   }
 
   return response.json();
@@ -136,14 +134,14 @@ export async function createSession(data: {
  */
 export async function getUserSessions() {
   const response = await fetch(`${API_BASE_URL}/api/chat/sessions`, {
-    method: 'GET',
+    method: "GET",
     headers: {
       Authorization: `Bearer ${getAuthToken()}`,
     },
   });
 
   if (!response.ok) {
-    throw new Error('获取会话列表失败');
+    throw new Error("获取会话列表失败");
   }
 
   return response.json();
@@ -153,15 +151,18 @@ export async function getUserSessions() {
  * 获取会话详情（包含所有消息）
  */
 export async function getSessionById(sessionId: number) {
-  const response = await fetch(`${API_BASE_URL}/api/chat/sessions/${sessionId}`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${getAuthToken()}`,
+  const response = await fetch(
+    `${API_BASE_URL}/api/chat/sessions/${sessionId}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
     },
-  });
+  );
 
   if (!response.ok) {
-    throw new Error('获取会话详情失败');
+    throw new Error("获取会话详情失败");
   }
 
   return response.json();
@@ -170,18 +171,24 @@ export async function getSessionById(sessionId: number) {
 /**
  * 更新会话标题
  */
-export async function updateSession(sessionId: number, data: { title?: string }) {
-  const response = await fetch(`${API_BASE_URL}/api/chat/sessions/${sessionId}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getAuthToken()}`,
+export async function updateSession(
+  sessionId: number,
+  data: { title?: string },
+) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/chat/sessions/${sessionId}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+      body: JSON.stringify(data),
     },
-    body: JSON.stringify(data),
-  });
+  );
 
   if (!response.ok) {
-    throw new Error('更新会话失败');
+    throw new Error("更新会话失败");
   }
 
   return response.json();
@@ -191,15 +198,18 @@ export async function updateSession(sessionId: number, data: { title?: string })
  * 删除会话
  */
 export async function deleteSession(sessionId: number) {
-  const response = await fetch(`${API_BASE_URL}/api/chat/sessions/${sessionId}`, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${getAuthToken()}`,
+  const response = await fetch(
+    `${API_BASE_URL}/api/chat/sessions/${sessionId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
     },
-  });
+  );
 
   if (!response.ok) {
-    throw new Error('删除会话失败');
+    throw new Error("删除会话失败");
   }
 
   return response.json();

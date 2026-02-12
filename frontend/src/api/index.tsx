@@ -1,6 +1,4 @@
-const API_BASE_URL =
-  (import.meta as ImportMeta & { env: Record<string, string | undefined> }).env
-    .VITE_API_URL || "http://localhost:8010";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8010";
 
 // 后端统一返回格式
 interface ApiResponse<T = any> {
