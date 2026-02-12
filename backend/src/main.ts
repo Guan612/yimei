@@ -14,8 +14,13 @@ async function bootstrap() {
   // 获取配置服务
   const appConfig = app.get(AppConfigService);
 
-  // 启用 CORS
-  app.enableCors();
+  // 启用 CORS - 允许任何前端访问
+  app.enableCors({
+    origin: true, // 允许所有来源
+    credentials: true, // 允许携带凭证（cookies、authorization headers等）
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // 允许的 HTTP 方法
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'], // 允许的请求头
+  });
 
   // 调大请求体限制（支持图片 base64 传输）
   app.use(json({ limit: '50mb' }));
