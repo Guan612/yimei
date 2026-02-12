@@ -7,7 +7,6 @@ import { UploadModule } from './upload/upload.module';
 import { ModelconfigModule } from './modelconfig/modelconfig.module';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { ZodSerializerInterceptor } from 'nestjs-zod';
-import { ModelReqModule } from './model-req/model-req.module';
 import { validate } from './config/env.validation';
 import { AppConfigModule } from './config/config.module';
 import { ImageGenModule } from './image-gen/image-gen.module';
@@ -39,11 +38,10 @@ import { ScheduleModule } from '@nestjs/schedule';
     PrismaModule,
     UploadModule,
     ModelconfigModule,
-    ModelReqModule,
     ImageGenModule,
     MedicalAestheticsModule,
     ChatModule,
-    ScheduleModule.forRoot()
+    ScheduleModule.forRoot(),
   ],
   controllers: [],
   providers: [
