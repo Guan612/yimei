@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { generateImgApi } from "@/api/imagegen";
-import type { ImageGenerationResponse } from "@/type/imagegen";
-import type { ChatAction } from "@/api/chat";
+import { useJobPolling } from "@/hooks/common/useJobPolling";
+import type { ChatAction } from "@/type/chat";
+import { toast } from "sonner";
 
 /**
  * 生成的图片信息
@@ -13,6 +14,7 @@ export interface GeneratedImage {
   url: string;
   prompt: string;
   loading?: boolean;
+  progress?: number;
 }
 
 /**
@@ -40,12 +42,14 @@ export interface UseChatImageGenerationReturn {
   markMessageGenerating: (msgId: string, generating: boolean) => void;
   /** 获取当前显示的图片 */
   currentImage: GeneratedImage | undefined;
+  /** 当前任务进度 (0-100) */
+  currentProgress: number;
 }
 
 /**
  * 聊天图片生成Hook
  *
- * 封装AI图片生成、图片列表管理、Lightbox等逻辑
+ * 封装AI图片生成、图片列表管理、Lightbox等逻辑，支持异步任务和进度跟踪
  *
  * @example
  * ```tsx
@@ -54,7 +58,8 @@ export interface UseChatImageGenerationReturn {
  *   selectedImage,
  *   handleGenerateImage,
  *   setSelectedImage,
- *   currentImage
+ *   currentImage,
+ *   currentProgress
  * } = useChatImageGeneration({
  *   onImageGenerated: (url, msgId) => {
  *     console.log('图片生成成功', url);
@@ -75,6 +80,12 @@ export function useChatImageGeneration(options?: {
   );
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
+  // 异步任务相关状态
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [currentProgress, setCurrentProgress] = useState<number>(0);
+  const [currentGeneratingImgId, setCurrentGeneratingImgId] = useState<string | null>(null);
+  const currentMsgIdRef = useRef<string | undefined>(undefined);
+
   const markMessageGenerating = useCallback(
     (msgId: string, generating: boolean) => {
       setGeneratingMsgIds((prev) => {
@@ -90,12 +101,106 @@ export function useChatImageGeneration(options?: {
     []
   );
 
+  // 使用轮询 hook
+  useJobPolling(jobId, {
+    interval: 2000,
+    onComplete: (result) => {
+      console.log('[useChatImageGeneration] 图片生成完成', result);
+
+      // 更新图片状态
+      if (currentGeneratingImgId) {
+        setImages((prev) =>
+          prev.map((img) =>
+            img.id === currentGeneratingImgId
+              ? { ...img, url: result.imageUrl, loading: false, progress: 100 }
+              : img
+          )
+        );
+      }
+
+      // 清理状态
+      setJobId(null);
+      setCurrentProgress(0);
+      setCurrentGeneratingImgId(null);
+
+      const msgId = currentMsgIdRef.current;
+      if (msgId) {
+        markMessageGenerating(msgId, false);
+      }
+
+      // 回调通知外部
+      if (options?.onImageGenerated) {
+        options.onImageGenerated(result.imageUrl, msgId);
+      }
+
+      toast.success("图片生成成功！");
+      currentMsgIdRef.current = undefined;
+    },
+    onError: (errorMsg) => {
+      console.error('[useChatImageGeneration] 图片生成失败', errorMsg);
+
+      // 移除生成失败的图片
+      if (currentGeneratingImgId) {
+        setImages((prev) => prev.filter((img) => img.id !== currentGeneratingImgId));
+        if (selectedImage === currentGeneratingImgId) {
+          setSelectedImage(null);
+        }
+      }
+
+      // 清理状态
+      setJobId(null);
+      setCurrentProgress(0);
+      setCurrentGeneratingImgId(null);
+
+      const msgId = currentMsgIdRef.current;
+      if (msgId) {
+        markMessageGenerating(msgId, false);
+      }
+
+      toast.error("图片生成失败", {
+        description: errorMsg,
+      });
+      currentMsgIdRef.current = undefined;
+    },
+    onProgress: (progress) => {
+      console.log('[useChatImageGeneration] 进度更新:', progress);
+      setCurrentProgress(progress);
+
+      // 更新图片的进度
+      if (currentGeneratingImgId) {
+        setImages((prev) =>
+          prev.map((img) =>
+            img.id === currentGeneratingImgId
+              ? { ...img, progress }
+              : img
+          )
+        );
+      }
+    },
+  });
+
   const handleGenerateImage = useCallback(
     async (action: ChatAction, msgId?: string) => {
       // 标记消息正在生图
       if (msgId) {
         markMessageGenerating(msgId, true);
+        currentMsgIdRef.current = msgId;
       }
+
+      // 创建临时图片占位符
+      const imgId = Date.now().toString();
+      const placeholderImg: GeneratedImage = {
+        id: imgId,
+        url: "",
+        prompt: action.prompt,
+        loading: true,
+        progress: 0,
+      };
+
+      setImages((prev) => [placeholderImg, ...prev]);
+      setSelectedImage(imgId);
+      setCurrentGeneratingImgId(imgId);
+      setCurrentProgress(0);
 
       try {
         const req: {
@@ -127,32 +232,48 @@ export function useChatImageGeneration(options?: {
         }
 
         const res = await generateImgApi(req);
-        if (res.code === 0 && res.data) {
-          const data = res.data as ImageGenerationResponse;
-          // 生图完成后才加入 images 数组并选中
-          const imgId = Date.now().toString();
-          const newImg: GeneratedImage = {
-            id: imgId,
-            url: data.imageUrl,
-            prompt: action.prompt,
-            loading: false,
-          };
-          setImages((prev) => [newImg, ...prev]);
-          setSelectedImage(imgId);
+        console.log('[useChatImageGeneration] API 响应:', res);
 
-          // 回调通知外部
-          if (options?.onImageGenerated) {
-            options.onImageGenerated(data.imageUrl, msgId);
+        if (res.code !== 0 || !res.data) {
+          const errorMsg = res.msg || "图片生成任务提交失败";
+
+          // 移除占位图片
+          setImages((prev) => prev.filter((img) => img.id !== imgId));
+          setSelectedImage(null);
+          setCurrentGeneratingImgId(null);
+
+          if (msgId) {
+            markMessageGenerating(msgId, false);
           }
 
-          return data.imageUrl;
+          toast.error(errorMsg);
+          currentMsgIdRef.current = undefined;
+          return;
         }
+
+        // 设置 jobId，触发轮询
+        console.log('[useChatImageGeneration] 设置 jobId:', res.data.jobId);
+        setJobId(res.data.jobId);
+        toast.success("任务已提交，正在生成中...", {
+          description: `任务ID: ${res.data.jobId}`,
+        });
       } catch (error) {
-        console.error("图片生成失败", error);
-      } finally {
+        console.error('[useChatImageGeneration] 图片生成失败', error);
+
+        // 移除占位图片
+        setImages((prev) => prev.filter((img) => img.id !== imgId));
+        setSelectedImage(null);
+        setCurrentGeneratingImgId(null);
+
         if (msgId) {
           markMessageGenerating(msgId, false);
         }
+
+        const errorMsg = error instanceof Error ? error.message : "图片生成失败";
+        toast.error("提交失败", {
+          description: errorMsg,
+        });
+        currentMsgIdRef.current = undefined;
       }
     },
     [markMessageGenerating, options]
@@ -170,5 +291,6 @@ export function useChatImageGeneration(options?: {
     handleGenerateImage,
     markMessageGenerating,
     currentImage,
+    currentProgress,
   };
 }

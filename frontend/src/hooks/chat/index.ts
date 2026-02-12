@@ -19,3 +19,6 @@ export type {
 
 export { useChatInput } from "./useChatInput";
 export type { UseChatInputReturn } from "./useChatInput";
+
+export { useChatPage } from "./useChatPage";
+export type { UseChatPageReturn } from "./useChatPage";
