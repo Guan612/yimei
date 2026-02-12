@@ -107,3 +107,100 @@ export function parseAction(text: string): { cleanText: string; action?: ChatAct
     return { cleanText: text };
   }
 }
+
+/**
+ * 创建新会话
+ */
+export async function createSession(data: {
+  title?: string;
+  context?: 'facesim' | 'poster' | 'general';
+}) {
+  const response = await fetch(`${API_BASE_URL}/api/chat/sessions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getAuthToken()}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error('创建会话失败');
+  }
+
+  return response.json();
+}
+
+/**
+ * 获取用户的所有会话
+ */
+export async function getUserSessions() {
+  const response = await fetch(`${API_BASE_URL}/api/chat/sessions`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${getAuthToken()}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('获取会话列表失败');
+  }
+
+  return response.json();
+}
+
+/**
+ * 获取会话详情（包含所有消息）
+ */
+export async function getSessionById(sessionId: number) {
+  const response = await fetch(`${API_BASE_URL}/api/chat/sessions/${sessionId}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${getAuthToken()}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('获取会话详情失败');
+  }
+
+  return response.json();
+}
+
+/**
+ * 更新会话标题
+ */
+export async function updateSession(sessionId: number, data: { title?: string }) {
+  const response = await fetch(`${API_BASE_URL}/api/chat/sessions/${sessionId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getAuthToken()}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error('更新会话失败');
+  }
+
+  return response.json();
+}
+
+/**
+ * 删除会话
+ */
+export async function deleteSession(sessionId: number) {
+  const response = await fetch(`${API_BASE_URL}/api/chat/sessions/${sessionId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${getAuthToken()}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('删除会话失败');
+  }
+
+  return response.json();
+}

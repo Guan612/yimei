@@ -24,6 +24,7 @@ model User {
   poster               Poster[]
   aestheticSimulations AestheticSimulation[]
   imageGenerations     ImageGeneration[]
+  chatSessions         ChatSession[]
 }
 
 model File {
@@ -108,4 +109,33 @@ model MedicalAesthetics {
   label       String
   prompt      String
   description String?
+}
+
+model ChatSession {
+  id        Int           @id @default(autoincrement())
+  userId    Int
+  title     String? // 会话标题（可以根据第一条消息自动生成）
+  context   String? // facesim | poster | general
+  user      User          @relation(fields: [userId], references: [id])
+  messages  ChatMessage[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+model ChatMessage {
+  id             Int         @id @default(autoincrement())
+  sessionId      Int
+  role           String // user | assistant
+  content        String      @db.Text
+  imageUrls      Json? // 用户上传的图片URLs数组
+  action         Json? // 解析的ACTION标记
+  generatedImage String? // 生成的图片URL
+  provider       String? // AI provider
+  model          String? // AI model
+  session        ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  createdAt      DateTime    @default(now())
+
+  @@index([sessionId, createdAt])
 }

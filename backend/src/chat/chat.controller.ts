@@ -1,7 +1,7 @@
-import { Controller, Post, Body, UseGuards, Res } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Res, Get, Param, Patch, Delete, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ChatService } from './chat.service';
-import { SendMessageDto } from './dto/chat.dto';
+import { SendMessageDto, CreateSessionDto, UpdateSessionDto } from './dto/chat.dto';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { UserInfo } from 'src/auth/decorators/current-user.decorator';
@@ -26,11 +26,54 @@ export class ChatController {
   }
 
   @Post('async')
+  @ApiOperation({ summary: '异步对话（队列）' })
   asyncMessage(
     @Body() dto: SendMessageDto,
     @UserInfo() user: TokenDto,
-    @Res() res: Response,
   ) {
     return this.chatService.sendMessage(dto, user.id);
+  }
+
+  @Post('sessions')
+  @ApiOperation({ summary: '创建新会话' })
+  createSession(
+    @Body() dto: CreateSessionDto,
+    @UserInfo() user: TokenDto,
+  ) {
+    return this.chatService.createSession(dto, user.id);
+  }
+
+  @Get('sessions')
+  @ApiOperation({ summary: '获取用户的所有会话' })
+  getUserSessions(@UserInfo() user: TokenDto) {
+    return this.chatService.getUserSessions(user.id);
+  }
+
+  @Get('sessions/:id')
+  @ApiOperation({ summary: '获取会话详情（包含所有消息）' })
+  getSessionById(
+    @Param('id', ParseIntPipe) id: number,
+    @UserInfo() user: TokenDto,
+  ) {
+    return this.chatService.getSessionById(id, user.id);
+  }
+
+  @Patch('sessions/:id')
+  @ApiOperation({ summary: '更新会话标题' })
+  updateSession(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateSessionDto,
+    @UserInfo() user: TokenDto,
+  ) {
+    return this.chatService.updateSession(id, user.id, dto);
+  }
+
+  @Delete('sessions/:id')
+  @ApiOperation({ summary: '删除会话' })
+  deleteSession(
+    @Param('id', ParseIntPipe) id: number,
+    @UserInfo() user: TokenDto,
+  ) {
+    return this.chatService.deleteSession(id, user.id);
   }
 }

@@ -1,15 +1,18 @@
 import {
   Injectable,
   Logger,
+  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { SendMessageDto } from './dto/chat.dto';
+import { SendMessageDto, CreateSessionDto, UpdateSessionDto } from './dto/chat.dto';
 import { Response } from 'express';
 import { AiProviderService } from '../ai-provider/ai-provider.service';
 import { ChatMessage } from '../ai-provider/providers/base.provider';
 import { QUEUE_NAMES } from '../queue/constants';
 import { TextGenerationJobData } from '../queue/interfaces';
+import { PrismaService } from '../prisma/prisma.service';
 
 const SYSTEM_PROMPT = `你是 AesthetiCore 医美智能助手，一位专业的医学美容顾问。你的职责：
 
@@ -45,6 +48,7 @@ export class ChatService {
 
   constructor(
     private readonly aiProviderService: AiProviderService,
+    private readonly prisma: PrismaService,
     @InjectQueue(QUEUE_NAMES.TEXT_GENERATION)
     private readonly textGenerationQueue: Queue<TextGenerationJobData>,
   ) {}
@@ -60,8 +64,23 @@ export class ChatService {
       `用户 ${userId} 发送流式消息，使用配置：${provider.name}`,
     );
 
+    // 如果提供了 sessionId，从数据库加载历史消息
+    let session: any = null;
+    if (dto.sessionId) {
+      session = await this.prisma.chatSession.findUnique({
+        where: { id: dto.sessionId, userId },
+        include: { messages: { orderBy: { createdAt: 'asc' } } },
+      });
+
+      if (!session) {
+        throw new NotFoundException(`会话 ${dto.sessionId} 不存在`);
+      }
+    }
+
     // 构建消息列表
-    const messages = this.buildMessages(dto);
+    const messages = session
+      ? this.buildMessagesFromSession(session, dto)
+      : this.buildMessages(dto);
 
     // 设置 SSE headers
     res.setHeader('Content-Type', 'text/event-stream');
@@ -70,8 +89,40 @@ export class ChatService {
     res.setHeader('X-Accel-Buffering', 'no');
     res.flushHeaders();
 
+    let assistantMessage = '';
+
     try {
+      // 收集流式响应
+      const originalWrite = res.write.bind(res);
+      res.write = (chunk: any, ...args: any[]) => {
+        const data = chunk.toString();
+        if (data.startsWith('data: ') && !data.includes('[DONE]')) {
+          try {
+            const jsonStr = data.substring(6).trim();
+            const parsed = JSON.parse(jsonStr);
+            if (parsed.content) {
+              assistantMessage += parsed.content;
+            }
+          } catch (e) {
+            // 忽略解析错误
+          }
+        }
+        return originalWrite(chunk, ...args);
+      };
+
       await provider.streamChat(messages, res);
+
+      // 保存消息到数据库
+      if (dto.sessionId || session) {
+        const sessionId = session?.id || dto.sessionId!;
+        await this.saveMessages(
+          sessionId,
+          userId,
+          dto,
+          assistantMessage,
+          provider.name,
+        );
+      }
     } catch (error) {
       this.logger.error('流式请求失败', error);
       res.write(`data: ${JSON.stringify({ error: '请求失败，请稍后重试' })}\n\n`);
@@ -163,5 +214,201 @@ export class ChatService {
       default:
         return '';
     }
+  }
+
+  /**
+   * 从数据库会话构建消息列表
+   */
+  private buildMessagesFromSession(
+    session: any,
+    dto: SendMessageDto,
+  ): ChatMessage[] {
+    const messages: ChatMessage[] = [
+      { role: 'system', content: SYSTEM_PROMPT },
+    ];
+
+    // 添加会话中的历史消息
+    for (const msg of session.messages) {
+      const imageUrls = msg.imageUrls as string[] | null;
+      if (imageUrls && imageUrls.length > 0 && msg.role === 'user') {
+        const content: any[] = [{ type: 'text', text: msg.content }];
+        for (const url of imageUrls) {
+          content.push({ type: 'image_url', image_url: { url } });
+        }
+        messages.push({ role: msg.role, content });
+      } else {
+        messages.push({ role: msg.role, content: msg.content });
+      }
+    }
+
+    // 添加当前用户消息
+    const contextHint = this.buildContextHint(dto.context || session.context);
+    const userText = contextHint
+      ? `[用户当前场景：${contextHint}]\n\n${dto.message}`
+      : dto.message;
+
+    if (dto.imageUrls && dto.imageUrls.length > 0) {
+      const content: any[] = [{ type: 'text', text: userText }];
+      for (const url of dto.imageUrls) {
+        content.push({ type: 'image_url', image_url: { url } });
+      }
+      messages.push({ role: 'user', content });
+    } else {
+      messages.push({ role: 'user', content: userText });
+    }
+
+    return messages;
+  }
+
+  /**
+   * 保存用户消息和助手回复到数据库
+   */
+  private async saveMessages(
+    sessionId: number,
+    _userId: number,
+    dto: SendMessageDto,
+    assistantMessage: string,
+    providerName: string,
+  ) {
+    try {
+      // 解析 ACTION 标记
+      let action: any = undefined;
+      const actionMatch = assistantMessage.match(/<!--ACTION:(\{.*?\})-->/);
+      if (actionMatch) {
+        try {
+          action = JSON.parse(actionMatch[1]);
+        } catch (e) {
+          this.logger.warn('解析 ACTION 标记失败', e);
+        }
+      }
+
+      await this.prisma.$transaction([
+        // 保存用户消息
+        this.prisma.chatMessage.create({
+          data: {
+            sessionId,
+            role: 'user',
+            content: dto.message,
+            imageUrls: dto.imageUrls && dto.imageUrls.length > 0 ? dto.imageUrls : undefined,
+          },
+        }),
+        // 保存助手回复
+        this.prisma.chatMessage.create({
+          data: {
+            sessionId,
+            role: 'assistant',
+            content: assistantMessage,
+            action,
+            provider: providerName,
+          },
+        }),
+      ]);
+
+      this.logger.log(`消息已保存到会话 ${sessionId}`);
+    } catch (error) {
+      this.logger.error('保存消息失败', error);
+    }
+  }
+
+  /**
+   * 创建新会话
+   */
+  async createSession(dto: CreateSessionDto, userId: number) {
+    const session = await this.prisma.chatSession.create({
+      data: {
+        userId,
+        title: dto.title || '新对话',
+        context: dto.context,
+      },
+    });
+
+    return session;
+  }
+
+  /**
+   * 获取用户的所有会话
+   */
+  async getUserSessions(userId: number) {
+    const sessions = await this.prisma.chatSession.findMany({
+      where: { userId },
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        messages: {
+          take: 1,
+          orderBy: { createdAt: 'asc' },
+          select: { content: true, createdAt: true },
+        },
+        _count: {
+          select: { messages: true },
+        },
+      },
+    });
+
+    return sessions.map((s) => ({
+      id: s.id,
+      title: s.title,
+      context: s.context,
+      createdAt: s.createdAt,
+      updatedAt: s.updatedAt,
+      messageCount: s._count.messages,
+      firstMessage: s.messages[0]?.content,
+    }));
+  }
+
+  /**
+   * 获取会话详情（包含所有消息）
+   */
+  async getSessionById(sessionId: number, userId: number) {
+    const session = await this.prisma.chatSession.findUnique({
+      where: { id: sessionId, userId },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+
+    if (!session) {
+      throw new NotFoundException(`会话 ${sessionId} 不存在`);
+    }
+
+    return session;
+  }
+
+  /**
+   * 更新会话标题
+   */
+  async updateSession(sessionId: number, userId: number, dto: UpdateSessionDto) {
+    const session = await this.prisma.chatSession.findUnique({
+      where: { id: sessionId, userId },
+    });
+
+    if (!session) {
+      throw new NotFoundException(`会话 ${sessionId} 不存在`);
+    }
+
+    return this.prisma.chatSession.update({
+      where: { id: sessionId },
+      data: { title: dto.title },
+    });
+  }
+
+  /**
+   * 删除会话
+   */
+  async deleteSession(sessionId: number, userId: number) {
+    const session = await this.prisma.chatSession.findUnique({
+      where: { id: sessionId, userId },
+    });
+
+    if (!session) {
+      throw new NotFoundException(`会话 ${sessionId} 不存在`);
+    }
+
+    await this.prisma.chatSession.delete({
+      where: { id: sessionId },
+    });
+
+    return { message: '会话已删除' };
   }
 }
