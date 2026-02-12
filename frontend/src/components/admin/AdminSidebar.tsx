@@ -43,13 +43,13 @@ export function AdminSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
-    <div className="w-64 border-r bg-muted/10 min-h-screen p-6">
-      <div className="mb-8">
+    <div className="w-64 border-r bg-muted/10 h-full p-6 flex flex-col overflow-hidden">
+      <div className="mb-8 shrink-0">
         <h2 className="text-2xl font-bold">管理后台</h2>
         <p className="text-sm text-muted-foreground mt-1">系统配置与管理</p>
       </div>
 
-      <nav className="space-y-2">
+      <nav className="space-y-2 flex-1 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href;
@@ -72,7 +72,7 @@ export function AdminSidebar() {
         })}
       </nav>
 
-      <div className="mt-8 pt-8 border-t">
+      <div className="mt-8 pt-8 border-t shrink-0">
         <Link
           to="/"
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"

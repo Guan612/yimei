@@ -8,30 +8,42 @@
 }
 
 @theme inline {
+  /* Brand palette (hex ok) */
+  --color-cream: #fffbf7;
+  --color-cream-dark: #f7f3ee;
+
+  --color-rose-gold: #b76e79;
+  --color-rose-gold-light: #d4a5a5;
+  --color-rose-gold-pale: #f5e6e8;
+
+  --color-charcoal: #2c2c2c;
+  --color-charcoal-light: #4a4a4a;
+
+  --color-warm-gray: #8b8178;
+  --color-warm-gray-light: #c4bdb4;
+
+  --color-gold-accent: #c9a962;
+
+  --color-sage: #a8b5a0;
+  --color-sage-light: #e8ede5;
+
+  /* ✅ 你原本已有的 shadcn token（保留也行） */
   --color-background: hsl(0 0% 100%);
   --color-foreground: hsl(0 0% 17%);
-
   --color-card: hsl(0 0% 100%);
   --color-card-foreground: hsl(0 0% 17%);
-
   --color-popover: hsl(0 0% 100%);
   --color-popover-foreground: hsl(0 0% 17%);
-
   --color-primary: hsl(343 30% 56%);
   --color-primary-foreground: hsl(32 100% 98%);
-
   --color-secondary: hsl(30 20% 79%);
   --color-secondary-foreground: hsl(0 0% 17%);
-
   --color-muted: hsl(30 20% 79%);
   --color-muted-foreground: hsl(30 10% 50%);
-
   --color-accent: hsl(42 44% 58%);
   --color-accent-foreground: hsl(0 0% 17%);
-
   --color-destructive: hsl(0 84% 60%);
   --color-destructive-foreground: hsl(32 100% 98%);
-
   --color-border: hsl(30 20% 79%);
   --color-input: hsl(30 20% 79%);
   --color-ring: hsl(343 30% 56%);
@@ -150,7 +162,8 @@ body {
 }
 
 @keyframes canvas-glow {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
     opacity: 0.5;
   }
