@@ -1,6 +1,7 @@
 import { Module, Global, OnModuleInit } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { HttpService } from '@nestjs/axios';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AiProviderService } from './ai-provider.service';
 import { PrismaModule } from '../prisma/prisma.module';
 
