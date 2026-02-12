@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { StatsOverview } from "@/components/admin/StatsOverview";
 
 function AdminStatsPage() {
   return (
@@ -10,9 +11,7 @@ function AdminStatsPage() {
         </p>
       </div>
 
-      <div className="rounded-lg border border-dashed p-12 text-center">
-        <p className="text-muted-foreground">统计功能开发中...</p>
-      </div>
+      <StatsOverview />
     </div>
   );
 }

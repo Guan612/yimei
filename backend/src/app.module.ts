@@ -17,6 +17,7 @@ import { ChatModule } from './chat/chat.module';
 import { AiProviderModule } from './ai-provider/ai-provider.module';
 import { QueueModule } from './queue/queue.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { StatsModule } from './stats/stats.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ImageGenModule,
     MedicalAestheticsModule,
     ChatModule,
+    StatsModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [],
