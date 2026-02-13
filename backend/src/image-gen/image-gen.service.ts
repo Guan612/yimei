@@ -13,6 +13,7 @@ import { AiProviderService } from '../ai-provider/ai-provider.service';
 import { ImageGenerationResult } from '../ai-provider/providers/base.provider';
 import { QUEUE_NAMES } from '../queue/constants';
 import { ImageGenerationJobData } from '../queue/interfaces';
+import { success } from '../common/result';
 
 @Injectable()
 export class ImageGenService {
@@ -404,26 +405,26 @@ export class ImageGenService {
   }
 
   /**
-   * 获取用户的生成历史
+   * 获取用户的生成历史（分页）
    */
-  async getUserGenerations(userId: number, limit = 20, offset = 0) {
+  async getUserGenerations(userId: number, page = 1, pageSize = 10) {
     this.logger.log(
-      `查询用户 ${userId} 的图片生成历史，limit=${limit}, offset=${offset}`,
+      `查询用户 ${userId} 的图片生成历史，page=${page}, pageSize=${pageSize}`,
     );
 
-    const generations = await this.prisma.imageGeneration.findMany({
+    const result = await this.prisma.paginate(this.prisma.imageGeneration, {
       where: { userId },
+      page,
+      pageSize,
+      orderBy: { createdAt: 'desc' },
       include: {
         file: true,
       },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset,
     });
 
-    this.logger.log(`找到 ${generations.length} 条记录`);
+    this.logger.log(`找到 ${result.data.length} 条记录`);
 
-    return generations;
+    return success('获取历史记录成功', result);
   }
 
   /**

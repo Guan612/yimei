@@ -1,5 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 import z from 'zod';
+import { PaginationQuerySchema } from '../../common/dto/common.dto';
 
 const createModelSchema = z.object({
   name: z.string().min(1, { message: '配置名称不能为空' }).describe('配置名称'),
@@ -29,18 +30,10 @@ const createModelSchema = z.object({
 
 const updateModelSchema = createModelSchema.partial();
 
-const queryModelSchema = z.object({
+const queryModelSchema = PaginationQuerySchema.extend({
   provider: z.string().optional().describe('按Provider类型筛选'),
   type: z.string().optional().describe('按服务类型筛选'),
   enabled: z.boolean().optional().describe('按启用状态筛选'),
-  page: z.coerce.number().int().positive().default(1).describe('页码'),
-  pageSize: z.coerce
-    .number()
-    .int()
-    .positive()
-    .max(100)
-    .default(20)
-    .describe('每页数量'),
 });
 
 const validateConfigSchema = z.object({

@@ -22,6 +22,7 @@ import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { Role, Roles } from 'src/auth/decorators';
 import { UserInfo } from 'src/auth/decorators/current-user.decorator';
 import { TokenDto } from 'src/auth/dto/auth.dto';
+import { PaginationQueryDto } from 'src/common/dto/common.dto';
 
 @Controller('medical-aesthetics')
 @ApiBearerAuth()
@@ -91,11 +92,17 @@ export class MedicalAestheticsController {
   }
 
   @Get('my')
-  @ApiOperation({ summary: '获取我的提示词列表' })
+  @ApiOperation({ summary: '获取我的提示词列表（分页）' })
   @Roles(Role.USER, Role.ADMIN)
-  async getMyPrompts(@UserInfo() user: TokenDto) {
-    const res = await this.medicalAestheticsService.findUserPrompts(user.id);
-    return success('获取个人提示词成功', res);
+  async getMyPrompts(
+    @UserInfo() user: TokenDto,
+    @Query() query: PaginationQueryDto,
+  ) {
+    return await this.medicalAestheticsService.findUserPrompts(
+      user.id,
+      query.page,
+      query.pageSize,
+    );
   }
 
   @Patch('my/:id')

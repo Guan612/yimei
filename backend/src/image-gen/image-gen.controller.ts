@@ -15,6 +15,7 @@ import {
   GenerateImageDto,
   InpaintImageDto,
   GenerateImageResponseDto,
+  ImageGenerationHistoryQueryDto,
 } from './dto/generate-image.dto';
 import { Result, success } from '../common/result';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
@@ -62,18 +63,17 @@ export class ImageGenController {
   }
 
   @Get('history')
-  @ApiOperation({ summary: '获取用户的图片生成历史' })
+  @ApiOperation({ summary: '获取用户的图片生成历史（分页）' })
   async getUserHistory(
     @UserInfo() user: TokenDto,
-    @Query('limit', ParseIntPipe) limit: number = 20,
-    @Query('offset', ParseIntPipe) offset: number = 0,
+    @Query() query: ImageGenerationHistoryQueryDto,
   ): Promise<Result<any>> {
-    const generations = await this.imageGenService.getUserGenerations(
+    const result = await this.imageGenService.getUserGenerations(
       user.id,
-      limit,
-      offset,
+      query.page,
+      query.pageSize,
     );
-    return success('获取历史记录成功', generations);
+    return result;
   }
 
   @Get(':id')

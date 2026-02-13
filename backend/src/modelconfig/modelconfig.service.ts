@@ -18,6 +18,7 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AI_MODEL_CONFIG_CHANGED } from 'src/common/events';
 import { AiProviderService } from '../ai-provider/ai-provider.service';
+import { success } from '../common/result';
 
 interface RateLimitInfo {
   configId: number;
@@ -73,30 +74,24 @@ export class ModelconfigService {
    * 查询所有Provider配置（支持筛选和分页）
    */
   async findAll(query?: QueryModelconfigDto) {
-    const { provider, type, enabled, page = 1, pageSize = 20 } = query || {};
+    const { provider, type, enabled, page, pageSize } = query || {};
 
+    // 构建筛选条件
     const where: any = {};
     if (provider) where.provider = provider;
     if (type) where.type = type;
     if (enabled !== undefined) where.enabled = enabled;
 
-    const [configs, total] = await Promise.all([
-      this.prisma.aiModelConfig.findMany({
-        where,
-        orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-      }),
-      this.prisma.aiModelConfig.count({ where }),
-    ]);
-
-    return {
-      list: configs,
-      total,
+    // 使用 Prisma 的分页方法
+    const result = await this.prisma.paginate(this.prisma.aiModelConfig, {
+      where,
       page,
       pageSize,
-      totalPages: Math.ceil(total / pageSize),
-    };
+      orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
+    });
+
+    // 返回 Result 格式
+    return success('查询成功', result);
   }
 
   /**

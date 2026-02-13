@@ -1,5 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+import { PaginationQuerySchema } from '../../common/dto/common.dto';
 
 // 图像生成请求Schema
 const GenerateImageSchema = z.object({
@@ -108,4 +109,9 @@ export const GenerateImageResponseSchema = z.object({
 
 export class GenerateImageResponseDto extends createZodDto(
   GenerateImageResponseSchema,
+) {}
+
+// 图片生成历史查询参数（继承分页参数）
+export class ImageGenerationHistoryQueryDto extends createZodDto(
+  PaginationQuerySchema,
 ) {}

@@ -16,6 +16,8 @@ const QueryMedicalAesthetiShema = z.object({
     .optional(),
 });
 
+
+
 const UpdateMedicalAesthetiShema = CreateMedicalAesthetiShema.partial();
 
 export class CreateMedicalAestheticDto extends createZodDto(

@@ -40,8 +40,7 @@ export class ModelconfigController {
   @Get()
   @ApiOperation({ summary: '获取所有Provider配置（支持筛选和分页）' })
   async findAll(@Query() query: QueryModelconfigDto) {
-    const data = await this.modelconfigService.findAll(query);
-    return success('查询成功', data);
+    return await this.modelconfigService.findAll(query);
   }
 
   @Get(':id')
