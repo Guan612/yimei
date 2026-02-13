@@ -108,6 +108,7 @@ export interface ImageGenerationOptions {
   referenceImageUrl?: string;
   referenceImageBase64?: string;
   referenceImageMimeType?: string;
+  imageSize?: '1K' | '2K' | '4K'; // Gemini 图片分辨率 (必须大写K)
 }
 
 export interface ImageGenerationResult {

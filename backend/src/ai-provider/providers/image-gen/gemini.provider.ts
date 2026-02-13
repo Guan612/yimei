@@ -113,6 +113,17 @@ export class GeminiImageGenProvider extends ImageGenProvider {
         },
       };
 
+      // 设置图片配置（分辨率和宽高比）
+      if (options?.imageSize || options?.aspectRatio) {
+        requestBody.generationConfig.imageConfig = {};
+        if (options.imageSize) {
+          requestBody.generationConfig.imageConfig.imageSize = options.imageSize;
+        }
+        if (options.aspectRatio) {
+          requestBody.generationConfig.imageConfig.aspectRatio = options.aspectRatio;
+        }
+      }
+
       const response = await firstValueFrom(
         this.httpService.post(
           `${this.config.baseUrl}/v1beta/models/${model}:generateContent?key=${this.config.apiKey}`,
@@ -225,6 +236,17 @@ export class GeminiImageGenProvider extends ImageGenProvider {
           responseModalities: ['IMAGE'],
         },
       };
+
+      // 设置图片配置（分辨率和宽高比）
+      if (options?.imageSize || options?.aspectRatio) {
+        requestBody.generationConfig.imageConfig = {};
+        if (options.imageSize) {
+          requestBody.generationConfig.imageConfig.imageSize = options.imageSize;
+        }
+        if (options.aspectRatio) {
+          requestBody.generationConfig.imageConfig.aspectRatio = options.aspectRatio;
+        }
+      }
 
       this.logger.debug(
         'Gemini Inpaint API Request URL:',
