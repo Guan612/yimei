@@ -3,15 +3,14 @@ import { UploadService } from './upload.service';
 import { UploadController } from './upload.controller';
 import { HttpModule } from '@nestjs/axios';
 import { S3Client } from '@aws-sdk/client-s3';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaModule } from '../prisma/prisma.module';
 import { AppConfigService } from '../config/config.service';
 
 @Module({
-  imports: [HttpModule],
+  imports: [HttpModule, PrismaModule],
   controllers: [UploadController],
   providers: [
     UploadService,
-    PrismaService,
     {
       provide: S3Client,
       useFactory: (appConfig: AppConfigService) => {

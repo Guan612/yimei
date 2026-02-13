@@ -561,4 +561,42 @@ export class AiProviderService {
   async selectImageGenProvider(): Promise<ImageGenProvider> {
     return this.selectProvider<ImageGenProvider>('image-gen');
   }
+
+  /**
+   * 根据配置ID验证 Provider 配置
+   * 用于测试 API Key 等配置是否有效
+   */
+  async validateProviderById(configId: number): Promise<boolean> {
+    // 首先尝试从已加载的 provider 中获取
+    let provider = this.providerInstances.get(configId);
+
+    // 如果没有找到（可能是未启用的配置），则从数据库加载并临时创建
+    if (!provider) {
+      const config = await this.prisma.aiModelConfig.findUnique({
+        where: { id: configId },
+      });
+
+      if (!config) {
+        throw new NotFoundException(`未找到ID为 ${configId} 的配置`);
+      }
+
+      provider = this.createProvider(config);
+      if (!provider) {
+        throw new NotFoundException(
+          `不支持的Provider类型：${config.type}/${config.provider}`,
+        );
+      }
+    }
+
+    try {
+      const isValid = await provider.validateConfig();
+      this.logger.log(
+        `配置验证${isValid ? '成功' : '失败'}：${provider.name} (ID: ${configId})`,
+      );
+      return isValid;
+    } catch (error) {
+      this.logger.error(`配置验证出错 (ID: ${configId})`, error as any);
+      throw error;
+    }
+  }
 }

@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { ModelconfigService } from './modelconfig.service';
 import { ModelconfigController } from './modelconfig.controller';
 import { HttpModule } from '@nestjs/axios';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [HttpModule],
+  imports: [HttpModule, PrismaModule],
   controllers: [ModelconfigController],
-  providers: [ModelconfigService, PrismaService],
+  providers: [ModelconfigService],
   exports: [ModelconfigService],
 })
 export class ModelconfigModule {}

@@ -15,12 +15,9 @@ import {
   RateLimitConfigDto,
   PresetParamsDto,
 } from './dto/modelconfig.dto';
-import { BaseImageProvider } from '../image-gen/providers/base.provider';
-import { StabilityProvider } from '../image-gen/providers/stability.provider';
-import { OpenAIProvider } from '../image-gen/providers/openai.provider';
-import { GeminiProvider } from 'src/image-gen/providers/gemini.provider';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AI_MODEL_CONFIG_CHANGED } from 'src/common/events';
+import { AiProviderService } from '../ai-provider/ai-provider.service';
 
 interface RateLimitInfo {
   configId: number;
@@ -40,6 +37,7 @@ export class ModelconfigService {
     private readonly prisma: PrismaService,
     private readonly httpService: HttpService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly aiProviderService: AiProviderService,
   ) {
     // 定期清理过期的限流记录（每分钟）
     setInterval(() => this.cleanupRateLimits(), 60000);
@@ -187,18 +185,7 @@ export class ModelconfigService {
     }
 
     try {
-      const provider = this.createProvider(config);
-      if (!provider) {
-        throw new BadRequestException(
-          `不支持的Provider类型：${config.provider}`,
-        );
-      }
-
-      const isValid = await provider.validateConfig();
-
-      this.logger.log(
-        `配置验证${isValid ? '成功' : '失败'}：${config.name} (ID: ${id})`,
-      );
+      const isValid = await this.aiProviderService.validateProviderById(id);
 
       return {
         configId: id,
@@ -495,30 +482,5 @@ export class ModelconfigService {
         this.rateLimitMap.delete(configId);
       }
     }
-  }
-
-  /**
-   * 根据配置创建Provider实例
-   */
-  private createProvider(config: any): BaseImageProvider | null {
-    let provider: BaseImageProvider;
-
-    switch (config.provider) {
-      case 'stability':
-        provider = new StabilityProvider(this.httpService);
-        break;
-      case 'openai':
-        provider = new OpenAIProvider(this.httpService);
-        break;
-      case 'gemini':
-        provider = new GeminiProvider(this.httpService);
-        break;
-      default:
-        this.logger.warn(`未知的Provider类型：${config.provider}`);
-        return null;
-    }
-
-    provider.setConfig(config);
-    return provider;
   }
 }
