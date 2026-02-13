@@ -1,24 +1,32 @@
 "use client";
 
-import { useAtom } from "jotai";
-import { selectedProviderIdAtom } from "@/store/imageGen";
-import { useImageGeneration } from "@/hooks/poster-gen/useImageGeneration";
-import { usePromptTerms } from "@/hooks/poster-gen/usePromptTerms";
-import { useGenerateFormState } from "@/hooks/poster-gen/useGenerateFormState";
-import type { GenerateImageRequest } from "@/type/imagegen";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
 import { ProviderSelector } from "./ProviderSelector";
-import { MEDICAL_AESTHETICS_CATEGORIES } from "@/type/medicalAesthetics";
+import { useGenerateForm } from "@/hooks/poster-gen/useGenerateForm";
 
 export function GenerateForm() {
-  const [selectedProviderId] = useAtom(selectedProviderIdAtom);
-  const { generate, isGenerating, progress, cancel } = useImageGeneration();
-
-  // 提示词库管理
   const {
+    // 表单相关
+    register,
+    onFormSubmit,
+    errors,
+    // 监听的表单值
+    outputFormat,
+    steps,
+    cfgScale,
+    outputCompression,
+    // 生成状态
+    isGenerating,
+    progress,
+    cancel,
+    // Provider 信息
+    isGeminiProvider,
+    isOpenAIProvider,
+    isGPTImageModel,
+    isDallE3,
+    // 提示词库
     filteredTerms,
     loadingTerms,
     promptInjectIds,
@@ -27,52 +35,13 @@ export function GenerateForm() {
     toggleInjectId,
     clearSelection,
     selectFiltered,
-  } = usePromptTerms();
-
-  // 表单状态管理
-  const {
-    prompt,
-    setPrompt,
-    negativePrompt,
-    setNegativePrompt,
-    promptInjectPosition,
-    setPromptInjectPosition,
+    // 高级选项
     showAdvanced,
-    setShowAdvanced,
-    aspectRatio,
-    setAspectRatio,
-    steps,
-    setSteps,
-    cfgScale,
-    setCfgScale,
-  } = useGenerateFormState();
-
-  const handleGenerate = async () => {
-    if (!prompt.trim()) {
-      toast.error("请输入提示词");
-      return;
-    }
-
-    const requestData: GenerateImageRequest = {
-      prompt: prompt.trim(),
-      negativePrompt: negativePrompt.trim() || undefined,
-      configId: selectedProviderId,
-      aspectRatio,
-      steps,
-      cfgScale,
-      ...(promptInjectIds.length > 0
-        ? {
-            promptInjectIds,
-            promptInjectPosition,
-          }
-        : {}),
-    };
-
-    await generate(requestData);
-  };
+    toggleAdvanced,
+  } = useGenerateForm();
 
   return (
-    <div className="space-y-6">
+    <form onSubmit={onFormSubmit} className="space-y-6">
       {/* Provider选择 */}
       <ProviderSelector />
 
@@ -81,12 +50,14 @@ export function GenerateForm() {
         <Label htmlFor="prompt">提示词（Prompt）*</Label>
         <textarea
           id="prompt"
-          className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+          className="flex min-h-30 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
           placeholder="描述你想要生成的海报内容，例如：一张医美诊所的宣传海报，现代简约风格，粉色和白色配色，高端奢华感..."
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
           disabled={isGenerating}
+          {...register("prompt")}
         />
+        {errors.prompt && (
+          <p className="text-xs text-destructive">{errors.prompt.message}</p>
+        )}
         <p className="text-xs text-muted-foreground">
           详细描述能得到更好的效果
         </p>
@@ -108,9 +79,8 @@ export function GenerateForm() {
               <select
                 id="injectPosition"
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                value={promptInjectPosition}
-                onChange={(e) => setPromptInjectPosition(e.target.value as any)}
                 disabled={isGenerating}
+                {...register("promptInjectPosition")}
               >
                 <option value="prepend">前置（推荐）</option>
                 <option value="append">后置</option>
@@ -157,7 +127,7 @@ export function GenerateForm() {
               <div className="p-3 text-sm text-muted-foreground">加载中...</div>
             ) : filteredTerms.length === 0 ? (
               <div className="p-3 text-sm text-muted-foreground">
-                暂无可用提示词，可在“提示词库”管理页添加
+                暂无可用提示词，可在"提示词库"管理页添加
               </div>
             ) : (
               <div className="divide-y">
@@ -207,12 +177,16 @@ export function GenerateForm() {
         <Label htmlFor="negativePrompt">负面提示词（可选）</Label>
         <textarea
           id="negativePrompt"
-          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+          className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
           placeholder="描述不想要的元素，例如：模糊，低质量，变形，文字错误..."
-          value={negativePrompt}
-          onChange={(e) => setNegativePrompt(e.target.value)}
           disabled={isGenerating}
+          {...register("negativePrompt")}
         />
+        {errors.negativePrompt && (
+          <p className="text-xs text-destructive">
+            {errors.negativePrompt.message}
+          </p>
+        )}
       </div>
 
       {/* 高级选项 */}
@@ -220,7 +194,7 @@ export function GenerateForm() {
         <button
           type="button"
           className="text-sm text-primary hover:underline"
-          onClick={() => setShowAdvanced(!showAdvanced)}
+          onClick={toggleAdvanced}
         >
           {showAdvanced ? "隐藏" : "显示"}高级选项
         </button>
@@ -233,9 +207,8 @@ export function GenerateForm() {
               <select
                 id="aspectRatio"
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                value={aspectRatio}
-                onChange={(e) => setAspectRatio(e.target.value as any)}
                 disabled={isGenerating}
+                {...register("aspectRatio")}
               >
                 <option value="1:1">1:1 (正方形)</option>
                 <option value="16:9">16:9 (横向)</option>
@@ -245,6 +218,139 @@ export function GenerateForm() {
               </select>
             </div>
 
+            {/* Gemini 图片分辨率 - 仅 Gemini Provider 显示 */}
+            {isGeminiProvider && (
+              <div className="space-y-2">
+                <Label htmlFor="imageSize">图片分辨率</Label>
+                <select
+                  id="imageSize"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  disabled={isGenerating}
+                  {...register("imageSize")}
+                >
+                  <option value="">默认 (1K)</option>
+                  <option value="1K">1K (1024px)</option>
+                  <option value="2K">2K (2048px)</option>
+                  <option value="4K">4K (4096px)</option>
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  更高分辨率生成时间更长
+                </p>
+              </div>
+            )}
+
+            {/* OpenAI 图片质量 - 仅 OpenAI Provider 显示 */}
+            {isOpenAIProvider && (
+              <div className="space-y-2">
+                <Label htmlFor="quality">图片质量</Label>
+                <select
+                  id="quality"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  disabled={isGenerating}
+                  {...register("quality")}
+                >
+                  <option value="">默认</option>
+                  {isGPTImageModel ? (
+                    <>
+                      <option value="auto">Auto (自动)</option>
+                      <option value="high">High (高质量)</option>
+                      <option value="medium">Medium (中等)</option>
+                      <option value="low">Low (低质量)</option>
+                    </>
+                  ) : isDallE3 ? (
+                    <>
+                      <option value="hd">HD (高清)</option>
+                      <option value="standard">Standard (标准)</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="auto">Auto (自动)</option>
+                      <option value="high">High (高质量)</option>
+                      <option value="medium">Medium (中等)</option>
+                      <option value="low">Low (低质量)</option>
+                      <option value="hd">HD (DALL-E 3)</option>
+                      <option value="standard">Standard (DALL-E 3)</option>
+                    </>
+                  )}
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  {isGPTImageModel
+                    ? "GPT image models 质量参数"
+                    : isDallE3
+                      ? "DALL-E 3 质量参数"
+                      : "根据模型自动适配"}
+                </p>
+              </div>
+            )}
+
+            {/* OpenAI GPT image models 特有参数 */}
+            {isGPTImageModel && (
+              <>
+                {/* 输出格式 */}
+                <div className="space-y-2">
+                  <Label htmlFor="outputFormat">输出格式</Label>
+                  <select
+                    id="outputFormat"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    disabled={isGenerating}
+                    {...register("outputFormat")}
+                  >
+                    <option value="">默认 (PNG)</option>
+                    <option value="png">PNG</option>
+                    <option value="jpeg">JPEG</option>
+                    <option value="webp">WebP</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    PNG 和 WebP 支持透明背景
+                  </p>
+                </div>
+
+                {/* 背景透明度 */}
+                <div className="space-y-2">
+                  <Label htmlFor="background">背景透明度</Label>
+                  <select
+                    id="background"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    disabled={isGenerating}
+                    {...register("background")}
+                  >
+                    <option value="">默认 (Auto)</option>
+                    <option value="auto">Auto (自动)</option>
+                    <option value="transparent">Transparent (透明)</option>
+                    <option value="opaque">Opaque (不透明)</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    透明背景需要使用 PNG 或 WebP 格式
+                  </p>
+                </div>
+
+                {/* 压缩级别 */}
+                {(outputFormat === "jpeg" || outputFormat === "webp") && (
+                  <div className="space-y-2">
+                    <Label htmlFor="outputCompression">
+                      压缩级别: {outputCompression ?? 100}
+                    </Label>
+                    <Input
+                      type="range"
+                      id="outputCompression"
+                      min="0"
+                      max="100"
+                      disabled={isGenerating}
+                      {...register("outputCompression", { valueAsNumber: true })}
+                    />
+                    {errors.outputCompression && (
+                      <p className="text-xs text-destructive">
+                        {errors.outputCompression.message}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      降低压缩级别可减小文件大小
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+
             {/* 生成步数 */}
             <div className="space-y-2">
               <Label htmlFor="steps">生成步数: {steps}</Label>
@@ -253,10 +359,12 @@ export function GenerateForm() {
                 id="steps"
                 min="10"
                 max="150"
-                value={steps}
-                onChange={(e) => setSteps(Number(e.target.value))}
                 disabled={isGenerating}
+                {...register("steps", { valueAsNumber: true })}
               />
+              {errors.steps && (
+                <p className="text-xs text-destructive">{errors.steps.message}</p>
+              )}
               <p className="text-xs text-muted-foreground">
                 步数越多质量越好，但生成时间越长
               </p>
@@ -270,10 +378,14 @@ export function GenerateForm() {
                 id="cfgScale"
                 min="1"
                 max="20"
-                value={cfgScale}
-                onChange={(e) => setCfgScale(Number(e.target.value))}
                 disabled={isGenerating}
+                {...register("cfgScale", { valueAsNumber: true })}
               />
+              {errors.cfgScale && (
+                <p className="text-xs text-destructive">
+                  {errors.cfgScale.message}
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
                 控制AI对提示词的遵循程度，7-10为推荐值
               </p>
@@ -286,15 +398,15 @@ export function GenerateForm() {
       <div className="space-y-3">
         <div className="flex gap-2">
           <Button
-            onClick={handleGenerate}
-            disabled={isGenerating || !prompt.trim()}
+            type="submit"
+            disabled={isGenerating}
             className="flex-1"
             size="lg"
           >
             {isGenerating ? `生成中 ${progress}%` : "生成海报"}
           </Button>
           {isGenerating && (
-            <Button onClick={cancel} variant="outline" size="lg">
+            <Button type="button" onClick={cancel} variant="outline" size="lg">
               取消
             </Button>
           )}
@@ -308,6 +420,6 @@ export function GenerateForm() {
           </div>
         )}
       </div>
-    </div>
+    </form>
   );
 }

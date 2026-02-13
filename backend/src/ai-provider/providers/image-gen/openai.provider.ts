@@ -59,6 +59,7 @@ export class OpenAIImageGenProvider extends ImageGenProvider {
 
       // DALL-E 3 支持的尺寸: 1024x1024, 1024x1792, 1792x1024
       // DALL-E 2 支持的尺寸: 256x256, 512x512, 1024x1024
+      // GPT image models 支持的尺寸: 1024x1024, 1536x1024, 1024x1536, auto
       let size = '1024x1024';
       if (options?.width && options?.height) {
         size = `${options.width}x${options.height}`;
@@ -79,10 +80,39 @@ export class OpenAIImageGenProvider extends ImageGenProvider {
         response_format: 'url', // 或 'b64_json'
       };
 
+      // 检测是否为 GPT image models
+      const isGPTImageModel = model.startsWith('gpt-image');
+
+      // GPT image models 特有参数
+      if (isGPTImageModel) {
+        // 质量参数 (auto, high, medium, low)
+        if (options?.quality) {
+          requestBody.quality = options.quality;
+        }
+        // 输出格式 (png, jpeg, webp)
+        if (options?.outputFormat) {
+          requestBody.output_format = options.outputFormat;
+        }
+        // 压缩级别 (0-100)
+        if (options?.outputCompression !== undefined) {
+          requestBody.output_compression = options.outputCompression;
+        }
+        // 背景透明度 (transparent, opaque, auto)
+        if (options?.background) {
+          requestBody.background = options.background;
+        }
+        // 风格 (如果没有通过 style 传递)
+        if (options?.style) {
+          requestBody.style = options.style;
+        }
+      }
+
       // DALL-E 3 特有参数
       if (model === 'dall-e-3') {
-        requestBody.quality = options?.style === 'hd' ? 'hd' : 'standard';
-        requestBody.style = options?.style || 'vivid'; // vivid | natural
+        // 质量参数 (hd, standard)
+        requestBody.quality = options?.quality || 'standard';
+        // 风格参数 (vivid, natural)
+        requestBody.style = options?.style || 'vivid';
       }
 
       const response = await firstValueFrom(
@@ -142,6 +172,19 @@ export class OpenAIImageGenProvider extends ImageGenProvider {
         this.downloadImage(maskUrl),
       ]);
 
+      // 确定输出尺寸
+      let size = '1024x1024';
+      if (options?.width && options?.height) {
+        size = `${options.width}x${options.height}`;
+      } else if (options?.aspectRatio) {
+        const aspectRatioMap = {
+          '1:1': '1024x1024',
+          '16:9': '512x512', // DALL-E 2 编辑最大支持 512x512
+          '9:16': '512x512',
+        };
+        size = aspectRatioMap[options.aspectRatio] || '1024x1024';
+      }
+
       // 构建 multipart/form-data
       const FormData = require('form-data');
       const formData = new FormData();
@@ -149,7 +192,7 @@ export class OpenAIImageGenProvider extends ImageGenProvider {
       formData.append('mask', maskBuffer, 'mask.png');
       formData.append('prompt', prompt);
       formData.append('n', '1');
-      formData.append('size', '1024x1024');
+      formData.append('size', size);
       formData.append('response_format', 'url');
 
       const response = await firstValueFrom(

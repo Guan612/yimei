@@ -12,7 +12,7 @@ const GenerateImageSchema = z.object({
     .array(z.number().int().positive())
     .max(20)
     .optional()
-    .describe('从“提示词库”(medical_aesthetics)选择要注入的提示词ID列表'),
+    .describe('从"提示词库"(medical_aesthetics)选择要注入的提示词ID列表'),
   promptInjectPosition: z
     .enum(['prepend', 'append'])
     .default('prepend')
@@ -63,6 +63,38 @@ const GenerateImageSchema = z.object({
     .string()
     .optional()
     .describe('参考图片MIME类型，如image/jpeg'),
+  // Gemini 图片分辨率
+  imageSize: z
+    .enum(['1K', '2K', '4K'])
+    .optional()
+    .describe('图片分辨率（Gemini专用）：1K/2K/4K，必须大写'),
+  // OpenAI 质量参数
+  quality: z
+    .enum(['auto', 'high', 'medium', 'low', 'hd', 'standard'])
+    .optional()
+    .describe(
+      '图片质量：GPT image models支持auto/high/medium/low，DALL-E 3支持hd/standard',
+    ),
+  // OpenAI GPT image models 输出格式
+  outputFormat: z
+    .enum(['png', 'jpeg', 'webp'])
+    .optional()
+    .describe('输出格式（GPT image models专用）：png/jpeg/webp'),
+  // OpenAI GPT image models 压缩级别
+  outputCompression: z
+    .number()
+    .int()
+    .min(0)
+    .max(100)
+    .optional()
+    .describe('压缩级别（GPT image models专用）：0-100，默认100'),
+  // OpenAI GPT image models 背景透明度
+  background: z
+    .enum(['transparent', 'opaque', 'auto'])
+    .optional()
+    .describe(
+      '背景透明度（GPT image models专用）：transparent/opaque/auto，需配合png或webp格式',
+    ),
 });
 
 // Inpainting请求Schema
@@ -74,7 +106,7 @@ const InpaintImageSchema = z.object({
     .array(z.number().int().positive())
     .max(20)
     .optional()
-    .describe('从“提示词库”(medical_aesthetics)选择要注入的提示词ID列表'),
+    .describe('从"提示词库"(medical_aesthetics)选择要注入的提示词ID列表'),
   promptInjectPosition: z
     .enum(['prepend', 'append'])
     .default('prepend')
@@ -91,6 +123,40 @@ const InpaintImageSchema = z.object({
   steps: z.number().int().min(10).max(150).optional(),
   cfgScale: z.number().min(1).max(20).optional(),
   seed: z.number().int().optional(),
+  width: z.number().int().min(256).max(2048).optional().describe('输出宽度'),
+  height: z.number().int().min(256).max(2048).optional().describe('输出高度'),
+  aspectRatio: z
+    .enum(['1:1', '16:9', '9:16', '4:3', '3:4'])
+    .optional()
+    .describe('输出宽高比'),
+  // Gemini 图片分辨率
+  imageSize: z
+    .enum(['1K', '2K', '4K'])
+    .optional()
+    .describe('图片分辨率（Gemini专用）'),
+  // OpenAI 质量参数
+  quality: z
+    .enum(['auto', 'high', 'medium', 'low', 'hd', 'standard'])
+    .optional()
+    .describe('图片质量'),
+  // OpenAI GPT image models 输出格式
+  outputFormat: z
+    .enum(['png', 'jpeg', 'webp'])
+    .optional()
+    .describe('输出格式'),
+  // OpenAI GPT image models 压缩级别
+  outputCompression: z
+    .number()
+    .int()
+    .min(0)
+    .max(100)
+    .optional()
+    .describe('压缩级别（0-100）'),
+  // OpenAI GPT image models 背景透明度
+  background: z
+    .enum(['transparent', 'opaque', 'auto'])
+    .optional()
+    .describe('背景透明度'),
 });
 
 // 使用nestjs-zod创建DTO类

@@ -7,9 +7,9 @@ export type {
 export { useProviderSelector } from "./useProviderSelector";
 export type { UseProviderSelectorReturn } from "./useProviderSelector";
 
+export { useProviderInfo } from "./useProviderInfo";
+
 export { useGenerationHistory } from "./useGenerationHistory";
 export type { UseGenerationHistoryReturn } from "./useGenerationHistory";
 
 export { usePromptTerms } from "./usePromptTerms";
-
-export { useGenerateFormState } from "./useGenerateFormState";

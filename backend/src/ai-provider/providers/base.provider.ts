@@ -108,7 +108,18 @@ export interface ImageGenerationOptions {
   referenceImageUrl?: string;
   referenceImageBase64?: string;
   referenceImageMimeType?: string;
-  imageSize?: '1K' | '2K' | '4K'; // Gemini 图片分辨率 (必须大写K)
+  // Gemini 图片分辨率 (必须大写K)
+  imageSize?: '1K' | '2K' | '4K';
+  // OpenAI 质量参数
+  // GPT image models: 'auto' | 'high' | 'medium' | 'low'
+  // DALL-E 3: 'hd' | 'standard'
+  quality?: 'auto' | 'high' | 'medium' | 'low' | 'hd' | 'standard';
+  // OpenAI GPT image models 输出格式
+  outputFormat?: 'png' | 'jpeg' | 'webp';
+  // OpenAI GPT image models 压缩级别 (0-100)
+  outputCompression?: number;
+  // OpenAI GPT image models 背景透明度
+  background?: 'transparent' | 'opaque' | 'auto';
 }
 
 export interface ImageGenerationResult {

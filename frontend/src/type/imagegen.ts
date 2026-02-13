@@ -11,7 +11,7 @@ export interface GenerateImageRequest {
   promptInjectPosition?: "prepend" | "append";
   negativePrompt?: string;
   configId?: number;
-  provider?: "stability" | "openai" | "aliyun" | "auto";
+  provider?: "stability" | "openai" | "aliyun" | "gemini" | "auto";
   width?: number;
   height?: number;
   aspectRatio?: "1:1" | "16:9" | "9:16" | "4:3" | "3:4";
@@ -24,6 +24,16 @@ export interface GenerateImageRequest {
   referenceImageUrl?: string;
   referenceImageBase64?: string;
   referenceImageMimeType?: string;
+  // Gemini 图片分辨率
+  imageSize?: "1K" | "2K" | "4K";
+  // OpenAI 质量参数
+  quality?: "auto" | "high" | "medium" | "low" | "hd" | "standard";
+  // OpenAI GPT image models 输出格式
+  outputFormat?: "png" | "jpeg" | "webp";
+  // OpenAI GPT image models 压缩级别 (0-100)
+  outputCompression?: number;
+  // OpenAI GPT image models 背景透明度
+  background?: "transparent" | "opaque" | "auto";
 }
 
 export interface InpaintImageRequest {
@@ -34,11 +44,24 @@ export interface InpaintImageRequest {
   promptInjectPosition?: "prepend" | "append";
   negativePrompt?: string;
   configId?: number;
-  provider?: "stability" | "openai" | "Gemini" | "auto";
+  provider?: "stability" | "openai" | "gemini" | "auto";
   strength?: number;
   steps?: number;
   cfgScale?: number;
   seed?: number;
+  width?: number;
+  height?: number;
+  aspectRatio?: "1:1" | "16:9" | "9:16" | "4:3" | "3:4";
+  // Gemini 图片分辨率
+  imageSize?: "1K" | "2K" | "4K";
+  // OpenAI 质量参数
+  quality?: "auto" | "high" | "medium" | "low" | "hd" | "standard";
+  // OpenAI GPT image models 输出格式
+  outputFormat?: "png" | "jpeg" | "webp";
+  // OpenAI GPT image models 压缩级别 (0-100)
+  outputCompression?: number;
+  // OpenAI GPT image models 背景透明度
+  background?: "transparent" | "opaque" | "auto";
 }
 
 export interface ImageGenerationResponse {
