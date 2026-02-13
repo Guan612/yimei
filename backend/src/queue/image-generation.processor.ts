@@ -9,7 +9,9 @@ import {
   InpaintImageDto,
 } from '../image-gen/dto/generate-image.dto';
 
-@Processor(QUEUE_NAMES.IMAGE_GENERATION)
+@Processor(QUEUE_NAMES.IMAGE_GENERATION, {
+  concurrency: 5, // 同时处理 5 个图片生成任务
+})
 export class ImageGenerationProcessor extends WorkerHost {
   private readonly logger = new Logger(ImageGenerationProcessor.name);
 

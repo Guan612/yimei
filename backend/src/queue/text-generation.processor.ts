@@ -6,7 +6,9 @@ import { TextGenerationJobData, TextGenerationJobResult } from './interfaces';
 import { AiProviderService } from '../ai-provider/ai-provider.service';
 import { Writable } from 'stream';
 
-@Processor(QUEUE_NAMES.TEXT_GENERATION)
+@Processor(QUEUE_NAMES.TEXT_GENERATION,{
+  concurrency: 5,
+})
 export class TextGenerationProcessor extends WorkerHost {
   private readonly logger = new Logger(TextGenerationProcessor.name);
 
