@@ -442,6 +442,20 @@ export class ImageGenService {
       throw new NotFoundException('未找到对应的生成记录');
     }
 
+    // 生成文件的签名URL（有效期7天）
+    if (generation.file) {
+      const fileUrl = await this.uploadService.getFileUrlByKey(
+        generation.file.key,
+        userId,
+        7 * 24 * 60 * 60, // 7天有效期
+      );
+      // 将签名URL添加到file对象中
+      generation.file = {
+        ...generation.file,
+        url: fileUrl.url,
+      } as any;
+    }
+
     return generation;
   }
 
