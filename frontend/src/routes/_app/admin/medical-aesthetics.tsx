@@ -1,6 +1,6 @@
+import { MedicalAestheticsConfig } from "@/components/admin/medicalAestheticsConfig";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { MedicalAestheticsConfig } from '@/components/admin/medicalAestheticsConfig';
 
 function AdminMedicalAestheticsPage() {
   return (

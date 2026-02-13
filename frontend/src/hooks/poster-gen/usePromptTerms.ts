@@ -15,13 +15,13 @@ export function usePromptTerms() {
     const loadTerms = async () => {
       try {
         setLoadingTerms(true);
-        const res = await medicalAestheticsListApi("poster");
+        const res = await medicalAestheticsListApi({ category: "poster" });
         if (res.code !== 0) {
           toast.error(res.msg || "加载提示词库失败");
           setTerms([]);
           return;
         }
-        setTerms((res.data as any) || []);
+        setTerms(res.data || []);
       } catch (e: any) {
         toast.error("加载提示词库失败", {
           description: e?.message,

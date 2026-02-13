@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,13 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Edit2, Trash2, Loader2 } from "lucide-react";
+import { Plus, Edit2, Trash2, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useMyPrompts } from "@/hooks/me/useMyPrompts";
-import {
-  MEDICAL_AESTHETICS_CATEGORIES,
-  type medicalAestheticsRespons,
-  type creatMedicalAesthetics,
-} from "@/type/medicalAesthetics";
+import { useMyPromptsLogic } from "@/hooks/me/useMyPromptsLogic";
+import { MEDICAL_AESTHETICS_CATEGORIES } from "@/type/medicalAesthetics";
 
 /**
  * 我的提示词组件
@@ -35,67 +31,39 @@ import {
  * 用于管理用户个人的提示词
  */
 export function MyPrompts() {
-  const { prompts, loading, submitting, createPrompt, updatePrompt, deletePrompt } =
+  const { prompts, pagination, loading, submitting, changePage, createPrompt, updatePrompt, deletePrompt } =
     useMyPrompts();
 
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingPrompt, setEditingPrompt] = useState<medicalAestheticsRespons | null>(
-    null
-  );
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deletingPrompt, setDeletingPrompt] = useState<medicalAestheticsRespons | null>(
-    null
-  );
-
-  // 表单状态
-  const [formData, setFormData] = useState<creatMedicalAesthetics>({
-    category: "skin",
-    label: "",
-    prompt: "",
-    description: "",
-  });
-
-  // 打开新建对话框
-  const handleCreate = () => {
-    setEditingPrompt(null);
-    setFormData({
-      category: "skin",
-      label: "",
-      prompt: "",
-      description: "",
-    });
-    setDialogOpen(true);
-  };
-
-  // 打开编辑对话框
-  const handleEdit = (prompt: medicalAestheticsRespons) => {
-    setEditingPrompt(prompt);
-    setFormData({
-      category: prompt.category as any,
-      label: prompt.label,
-      prompt: prompt.prompt,
-      description: prompt.description || "",
-    });
-    setDialogOpen(true);
-  };
-
-  // 打开删除对话框
-  const handleDeleteClick = (prompt: medicalAestheticsRespons) => {
-    setDeletingPrompt(prompt);
-    setDeleteDialogOpen(true);
-  };
+  const {
+    dialogOpen,
+    setDialogOpen,
+    deleteDialogOpen,
+    editingPrompt,
+    deletingPrompt,
+    formData,
+    updateFormData,
+    handleCreate,
+    handleEdit,
+    handleDeleteClick,
+    closeDialog,
+    closeDeleteDialog,
+    getCategoryLabel,
+    goToPage,
+    goToPreviousPage,
+    goToNextPage,
+  } = useMyPromptsLogic(prompts, pagination, changePage);
 
   // 提交表单
   const handleSubmit = async () => {
     if (editingPrompt) {
       const success = await updatePrompt(editingPrompt.id, formData);
       if (success) {
-        setDialogOpen(false);
+        closeDialog();
       }
     } else {
       const success = await createPrompt(formData);
       if (success) {
-        setDialogOpen(false);
+        closeDialog();
       }
     }
   };
@@ -105,18 +73,9 @@ export function MyPrompts() {
     if (deletingPrompt) {
       const success = await deletePrompt(deletingPrompt.id);
       if (success) {
-        setDeleteDialogOpen(false);
-        setDeletingPrompt(null);
+        closeDeleteDialog();
       }
     }
-  };
-
-  // 获取分类标签
-  const getCategoryLabel = (category: string) => {
-    return (
-      MEDICAL_AESTHETICS_CATEGORIES.find((c) => c.id === category)?.label ||
-      category
-    );
   };
 
   return (
@@ -147,53 +106,96 @@ export function MyPrompts() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {prompts.map((prompt) => (
-              <div
-                key={prompt.id}
-                className="p-4 rounded-xl border border-[var(--warm-gray-light)]/30 hover:border-[var(--rose-gold)] hover:bg-[var(--rose-gold-pale)]/30 transition-all duration-300 group"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center px-2 py-1 rounded-md bg-[var(--rose-gold-pale)] text-[var(--rose-gold)] text-xs">
-                        {getCategoryLabel(prompt.category)}
-                      </span>
-                      <h4 className="text-sm font-medium text-[var(--charcoal)]">
-                        {prompt.label}
-                      </h4>
-                    </div>
-                    <p className="text-sm text-[var(--warm-gray)] line-clamp-2">
-                      {prompt.prompt}
-                    </p>
-                    {prompt.description && (
-                      <p className="text-xs text-[var(--warm-gray)]/70">
-                        {prompt.description}
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              {prompts.map((prompt) => (
+                <div
+                  key={prompt.id}
+                  className="p-4 rounded-xl border border-[var(--warm-gray-light)]/30 hover:border-[var(--rose-gold)] hover:bg-[var(--rose-gold-pale)]/30 transition-all duration-300 group"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center px-2 py-1 rounded-md bg-[var(--rose-gold-pale)] text-[var(--rose-gold)] text-xs">
+                          {getCategoryLabel(prompt.category)}
+                        </span>
+                        <h4 className="text-sm font-medium text-[var(--charcoal)]">
+                          {prompt.label}
+                        </h4>
+                      </div>
+                      <p className="text-sm text-[var(--warm-gray)] line-clamp-2">
+                        {prompt.prompt}
                       </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(prompt)}
-                      className="h-8 w-8 p-0 hover:bg-[var(--rose-gold-pale)] hover:text-[var(--rose-gold)]"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteClick(prompt)}
-                      className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                      {prompt.description && (
+                        <p className="text-xs text-[var(--warm-gray)]/70">
+                          {prompt.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(prompt)}
+                        className="h-8 w-8 p-0 hover:bg-[var(--rose-gold-pale)] hover:text-[var(--rose-gold)]"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteClick(prompt)}
+                        className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
+              ))}
+            </div>
+
+            {/* 分页控件 */}
+            {pagination && pagination.totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToPreviousPage}
+                  disabled={pagination.page === 1}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+                    <Button
+                      key={page}
+                      variant={pagination.page === page ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => goToPage(page)}
+                      className={
+                        pagination.page === page
+                          ? "h-8 w-8 p-0 bg-[var(--rose-gold)] hover:bg-[var(--rose-gold)]/90 text-white"
+                          : "h-8 w-8 p-0"
+                      }
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToNextPage}
+                  disabled={pagination.page === pagination.totalPages}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </Card>
 
@@ -216,7 +218,7 @@ export function MyPrompts() {
               <Select
                 value={formData.category}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, category: value as any })
+                  updateFormData({ category: value as any })
                 }
               >
                 <SelectTrigger>
@@ -237,7 +239,7 @@ export function MyPrompts() {
                 id="label"
                 value={formData.label}
                 onChange={(e) =>
-                  setFormData({ ...formData, label: e.target.value })
+                  updateFormData({ label: e.target.value })
                 }
                 placeholder="例如：双眼皮、隆鼻..."
               />
@@ -248,7 +250,7 @@ export function MyPrompts() {
                 id="prompt"
                 value={formData.prompt}
                 onChange={(e) =>
-                  setFormData({ ...formData, prompt: e.target.value })
+                  updateFormData({ prompt: e.target.value })
                 }
                 placeholder="输入提示词内容..."
                 rows={4}
@@ -260,7 +262,7 @@ export function MyPrompts() {
                 id="description"
                 value={formData.description}
                 onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
+                  updateFormData({ description: e.target.value })
                 }
                 placeholder="输入描述..."
               />
@@ -269,7 +271,7 @@ export function MyPrompts() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setDialogOpen(false)}
+              onClick={closeDialog}
               disabled={submitting}
             >
               取消
@@ -289,7 +291,7 @@ export function MyPrompts() {
       </Dialog>
 
       {/* 删除确认对话框 */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <Dialog open={deleteDialogOpen} onOpenChange={closeDeleteDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>确认删除</DialogTitle>
@@ -300,10 +302,7 @@ export function MyPrompts() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => {
-                setDeleteDialogOpen(false);
-                setDeletingPrompt(null);
-              }}
+              onClick={closeDeleteDialog}
             >
               取消
             </Button>

@@ -4,6 +4,8 @@ import type {
   InpaintImageRequest,
   ImageGenerationResponse,
   ImageGenerationHistory,
+  ImageHistoryQuery,
+  ImageHistoryListResponse,
   ProviderConfig,
   JobSubmitResponse,
   JobStatusResponse,
@@ -44,11 +46,12 @@ export const cancelJobApi = (jobId: string) => {
 };
 
 /**
- * 获取生成历史
+ * 获取生成历史（分页）
  */
-export const getHistoryImgApi = (limit = 20, offset = 0) => {
-  return api.get<ImageGenerationHistory[]>(
-    `/api/image-gen/history?limit=${limit}&offset=${offset}`,
+export const getHistoryImgApi = (params?: ImageHistoryQuery) => {
+  return api.get<ImageHistoryListResponse>(
+    `/api/image-gen/history`,
+    { params }
   );
 };
 

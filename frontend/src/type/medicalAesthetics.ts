@@ -1,5 +1,5 @@
-import { Label } from "@radix-ui/react-label";
 import z from "zod";
+import type { PaginationQuery, PaginatedData } from './common';
 
 export interface medicalAestheticsRespons {
   id: number;
@@ -16,6 +16,14 @@ export interface MedicalAestheticsTerm {
   prompt: string;
   description?: string;
 }
+
+// 查询参数（继承分页参数）
+export interface MedicalAestheticsQuery extends PaginationQuery {
+  category?: string;
+}
+
+// 导出统一的分页类型（从 common.ts）
+export type { PaginationQuery, PaginatedData };
 
 export const MEDICAL_AESTHETICS_CATEGORIES = [
   { id: "skin", label: "皮肤改善" },

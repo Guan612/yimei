@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
-import { useAtom, useSetAtom } from "jotai";
-import { generationHistoryAtom, currentGeneratedImageAtom } from "@/store/imageGen";
+import { useEffect, useState } from "react";
+import { useAtom } from "jotai";
+import { useNavigate } from "@tanstack/react-router";
+import { generationHistoryAtom } from "@/store/imageGen";
 import { getHistoryImgApi, getByIdImgApi } from "@/api/imagegen";
-import type { ImageGenerationHistory } from "@/type/imagegen";
-import { toast } from "sonner";
+import type { ImageGenerationHistory, ImageHistoryQuery } from "@/type/imagegen";
+import type { PaginationInfo } from "@/type/common";
 import { useAsyncOperation } from "@/hooks/common";
 
 /**
@@ -14,15 +15,16 @@ import { useAsyncOperation } from "@/hooks/common";
 export interface UseGenerationHistoryReturn {
   /** 历史记录列表 */
   history: ImageGenerationHistory[];
+  /** 分页信息 */
+  pagination: PaginationInfo | null;
   /** 加载历史记录 */
   loadHistory: (
-    limit?: number,
-    offset?: number
+    params?: ImageHistoryQuery
   ) => Promise<ImageGenerationHistory[] | null>;
   /** 查看详情 */
   viewDetail: (id: number) => Promise<ImageGenerationHistory | null>;
-  /** 查看并设置图片 */
-  handleViewImage: (historyItem: ImageGenerationHistory) => Promise<void>;
+  /** 查看并跳转到详情页 */
+  handleViewImage: (historyItem: ImageGenerationHistory) => void;
   /** 加载状态 */
   loading: boolean;
 }
@@ -49,15 +51,17 @@ export interface UseGenerationHistoryReturn {
  */
 export function useGenerationHistory(): UseGenerationHistoryReturn {
   const [history, setHistory] = useAtom(generationHistoryAtom);
-  const setCurrentImage = useSetAtom(currentGeneratedImageAtom);
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+  const navigate = useNavigate();
 
   const { execute: loadHistory, loading } = useAsyncOperation(
-    async (limit: number = 20, offset: number = 0) => {
-      const res = await getHistoryImgApi(limit, offset);
+    async (params?: ImageHistoryQuery) => {
+      const res = await getHistoryImgApi(params);
 
       if (res.code === 0 && res.data) {
-        setHistory(res.data);
-        return res.data;
+        setHistory(res.data.data);
+        setPagination(res.data.pagination);
+        return res.data.data;
       } else {
         throw new Error(res.msg || "加载历史记录失败");
       }
@@ -85,45 +89,27 @@ export function useGenerationHistory(): UseGenerationHistoryReturn {
   );
 
   /**
-   * 查看并设置图片到当前显示区域
+   * 查看并跳转到详情页
    */
-  const handleViewImage = async (historyItem: ImageGenerationHistory) => {
-    try {
-      const detail = await viewDetail(historyItem.id);
-
-      if (!detail) {
-        toast.error("加载图片失败");
-        return;
-      }
-
-      // 从detail构造currentImage格式
-      setCurrentImage({
-        id: detail.id,
-        imageUrl: detail.file.key,
-        provider: detail.provider,
-        configId: 0, // 历史记录可能没有configId
-        model: detail.model,
-        createdAt: detail.createdAt,
-      });
-
-      // 滚动到顶部查看图片
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (error: any) {
-      toast.error("加载图片失败", {
-        description: error.message,
-      });
-    }
+  const handleViewImage = (historyItem: ImageGenerationHistory) => {
+    console.log("Navigating to:", `/poster-gen/${historyItem.id}`);
+    navigate({
+      to: "/poster-gen/$id" as any,
+      params: { id: historyItem.id.toString() },
+    });
   };
 
   // 组件挂载时加载历史记录
   useEffect(() => {
     if (history.length === 0) {
-      loadHistory();
+      loadHistory({ page: 1, pageSize: 10 });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {
     history,
+    pagination,
     loadHistory,
     viewDetail,
     handleViewImage,

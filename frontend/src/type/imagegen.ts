@@ -2,6 +2,8 @@
  * 图像生成相关类型定义
  */
 
+import type { PaginationQuery, PaginatedData } from './common';
+
 // 请求类型
 export interface GenerateImageRequest {
   prompt: string;
@@ -84,19 +86,57 @@ export interface JobStatusResponse {
 export interface ImageGenerationHistory {
   id: number;
   userId: number;
+  fileId: number;
   prompt: string;
   negativePrompt?: string;
   provider: string;
   model?: string;
   status: string;
   type: string;
+  sourceImageId?: number;
+  cost?: number;
   file: {
     id: number;
     key: string;
     contentType: string;
+    size?: number;
+    status?: string;
+    userId?: number;
+    url?: string; // 后端返回的签名URL（可选）
+    createdAt?: string;
+    updatedAt?: string;
+  };
+  parameters?: {
+    steps?: number;
+    samples?: number;
+    cfgScale?: number;
+    configId?: number;
+    provider?: string;
+    aspectRatio?: string;
+    promptInjectIds?: number[];
+    promptInjectPosition?: "prepend" | "append";
+    [key: string]: any;
+  };
+  metadata?: {
+    configId?: number;
+    mimeType?: string;
+    promptInjection?: {
+      ids: number[];
+      position: "prepend" | "append";
+      finalPrompt: string;
+      injectedPrompts: string[];
+    };
+    [key: string]: any;
   };
   createdAt: string;
+  updatedAt?: string;
 }
+
+// 历史记录查询参数（继承分页参数）
+export interface ImageHistoryQuery extends PaginationQuery {}
+
+// 历史记录列表响应（使用统一的分页数据结构）
+export type ImageHistoryListResponse = PaginatedData<ImageGenerationHistory>;
 
 export interface ProviderConfig {
   id: number;

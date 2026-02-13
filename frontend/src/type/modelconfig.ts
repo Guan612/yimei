@@ -2,6 +2,8 @@
  * 模型配置相关类型定义
  */
 
+import type { PaginatedData, PaginationQuery } from './common';
+
 // Provider类型
 export type ProviderType = 'stability' | 'openai' | 'aliyun' | 'gemini';
 
@@ -53,13 +55,11 @@ export interface UpdateModelConfigDto {
   description?: string;
 }
 
-// 查询模型配置DTO
-export interface QueryModelConfigDto {
+// 查询模型配置DTO（继承分页参数）
+export interface QueryModelConfigDto extends PaginationQuery {
   provider?: string;
   type?: string;
   enabled?: boolean;
-  page?: number;
-  pageSize?: number;
 }
 
 // 验证配置DTO
@@ -86,14 +86,8 @@ export interface PresetParamsDto {
   params: Record<string, any>;
 }
 
-// 模型配置列表响应
-export interface ModelConfigListResponse {
-  list: ModelConfig[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
+// 模型配置列表响应（使用统一的分页数据结构）
+export type ModelConfigListResponse = PaginatedData<ModelConfig>;
 
 // 成本统计响应
 export interface CostStatsResponse {
