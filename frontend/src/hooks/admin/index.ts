@@ -19,4 +19,6 @@ export type {
   UseDeleteDialogOptions,
 } from "./useDeleteDialog";
 
+export { useImagePreview } from "./useImagePreview";
+
 export { useStats } from "./useStats";

@@ -4,6 +4,8 @@ import type {
   ConfirmUploadRequest,
   ConfirmUploadResponse,
   FileUrlResponse,
+  BatchGetUrlsRequest,
+  BatchGetUrlsResponse,
 } from '@/type/upload';
 
 /**
@@ -39,6 +41,33 @@ export const getFileUrlApi = (fileId: number, expiresIn = 3600) => {
 export const getFileUrlByKeyApi = (key: string, expiresIn = 3600) => {
   return api.get<FileUrlResponse>(
     `/api/upload/by-key?key=${key}&expiresIn=${expiresIn}`
+  );
+};
+
+/**
+ * 批量获取文件访问 URL
+ * @param fileIds 文件ID数组（最多100个）
+ * @param expiresIn URL有效期（秒），默认3小时
+ */
+export const getBatchFileUrlsApi = (data: BatchGetUrlsRequest) => {
+  return api.post<BatchGetUrlsResponse>('/api/upload/batch-urls', data);
+};
+
+/**
+ * 管理员批量获取文件访问 URL（无所有权限制）
+ * @param fileIds 文件ID数组（最多100个）
+ * @param expiresIn URL有效期（秒），默认3小时
+ */
+export const getBatchFileUrlsAsAdminApi = (data: BatchGetUrlsRequest) => {
+  return api.post<BatchGetUrlsResponse>('/api/upload/admin/batch-urls', data);
+};
+
+/**
+ * 管理员根据文件 ID 获取访问 URL（无所有权限制）
+ */
+export const getFileUrlAsAdminApi = (fileId: number, expiresIn = 3600) => {
+  return api.get<FileUrlResponse>(
+    `/api/upload/admin/${fileId}/url?expiresIn=${expiresIn}`
   );
 };
 
