@@ -24,6 +24,7 @@ import { Route as AppPosterGenIdRouteImport } from './routes/_app/poster-gen/$id
 import { Route as AppAdminUsersRouteImport } from './routes/_app/admin/users'
 import { Route as AppAdminStatsRouteImport } from './routes/_app/admin/stats'
 import { Route as AppAdminProvidersRouteImport } from './routes/_app/admin/providers'
+import { Route as AppAdminPosterPromptsRouteImport } from './routes/_app/admin/poster-prompts'
 import { Route as AppAdminModelsRouteImport } from './routes/_app/admin/models'
 import { Route as AppAdminMedicalAestheticsRouteImport } from './routes/_app/admin/medical-aesthetics'
 import { Route as AppAdminGenerationsRouteImport } from './routes/_app/admin/generations'
@@ -102,6 +103,11 @@ const AppAdminProvidersRoute = AppAdminProvidersRouteImport.update({
   path: '/providers',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const AppAdminPosterPromptsRoute = AppAdminPosterPromptsRouteImport.update({
+  id: '/poster-prompts',
+  path: '/poster-prompts',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 const AppAdminModelsRoute = AppAdminModelsRouteImport.update({
   id: '/models',
   path: '/models',
@@ -130,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/admin/generations': typeof AppAdminGenerationsRoute
   '/admin/medical-aesthetics': typeof AppAdminMedicalAestheticsRoute
   '/admin/models': typeof AppAdminModelsRoute
+  '/admin/poster-prompts': typeof AppAdminPosterPromptsRoute
   '/admin/providers': typeof AppAdminProvidersRoute
   '/admin/stats': typeof AppAdminStatsRoute
   '/admin/users': typeof AppAdminUsersRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByTo {
   '/admin/generations': typeof AppAdminGenerationsRoute
   '/admin/medical-aesthetics': typeof AppAdminMedicalAestheticsRoute
   '/admin/models': typeof AppAdminModelsRoute
+  '/admin/poster-prompts': typeof AppAdminPosterPromptsRoute
   '/admin/providers': typeof AppAdminProvidersRoute
   '/admin/stats': typeof AppAdminStatsRoute
   '/admin/users': typeof AppAdminUsersRoute
@@ -168,6 +176,7 @@ export interface FileRoutesById {
   '/_app/admin/generations': typeof AppAdminGenerationsRoute
   '/_app/admin/medical-aesthetics': typeof AppAdminMedicalAestheticsRoute
   '/_app/admin/models': typeof AppAdminModelsRoute
+  '/_app/admin/poster-prompts': typeof AppAdminPosterPromptsRoute
   '/_app/admin/providers': typeof AppAdminProvidersRoute
   '/_app/admin/stats': typeof AppAdminStatsRoute
   '/_app/admin/users': typeof AppAdminUsersRoute
@@ -189,6 +198,7 @@ export interface FileRouteTypes {
     | '/admin/generations'
     | '/admin/medical-aesthetics'
     | '/admin/models'
+    | '/admin/poster-prompts'
     | '/admin/providers'
     | '/admin/stats'
     | '/admin/users'
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/admin/generations'
     | '/admin/medical-aesthetics'
     | '/admin/models'
+    | '/admin/poster-prompts'
     | '/admin/providers'
     | '/admin/stats'
     | '/admin/users'
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/_app/admin/generations'
     | '/_app/admin/medical-aesthetics'
     | '/_app/admin/models'
+    | '/_app/admin/poster-prompts'
     | '/_app/admin/providers'
     | '/_app/admin/stats'
     | '/_app/admin/users'
@@ -348,6 +360,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminProvidersRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/_app/admin/poster-prompts': {
+      id: '/_app/admin/poster-prompts'
+      path: '/poster-prompts'
+      fullPath: '/admin/poster-prompts'
+      preLoaderRoute: typeof AppAdminPosterPromptsRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/_app/admin/models': {
       id: '/_app/admin/models'
       path: '/models'
@@ -376,6 +395,7 @@ interface AppAdminRouteChildren {
   AppAdminGenerationsRoute: typeof AppAdminGenerationsRoute
   AppAdminMedicalAestheticsRoute: typeof AppAdminMedicalAestheticsRoute
   AppAdminModelsRoute: typeof AppAdminModelsRoute
+  AppAdminPosterPromptsRoute: typeof AppAdminPosterPromptsRoute
   AppAdminProvidersRoute: typeof AppAdminProvidersRoute
   AppAdminStatsRoute: typeof AppAdminStatsRoute
   AppAdminUsersRoute: typeof AppAdminUsersRoute
@@ -386,6 +406,7 @@ const AppAdminRouteChildren: AppAdminRouteChildren = {
   AppAdminGenerationsRoute: AppAdminGenerationsRoute,
   AppAdminMedicalAestheticsRoute: AppAdminMedicalAestheticsRoute,
   AppAdminModelsRoute: AppAdminModelsRoute,
+  AppAdminPosterPromptsRoute: AppAdminPosterPromptsRoute,
   AppAdminProvidersRoute: AppAdminProvidersRoute,
   AppAdminStatsRoute: AppAdminStatsRoute,
   AppAdminUsersRoute: AppAdminUsersRoute,

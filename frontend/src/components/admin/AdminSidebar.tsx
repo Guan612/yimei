@@ -10,6 +10,7 @@ import {
   ArrowLeft,
   Sparkles,
   History,
+  FileText,
 } from "lucide-react";
 
 const navItems = [
@@ -42,6 +43,11 @@ const navItems = [
     title: "医美术语配置",
     href: "/admin/medical-aesthetics",
     icon: Sparkles,
+  },
+  {
+    title: "海报提示词配置",
+    href: "/admin/poster-prompts",
+    icon: FileText,
   },
 ];
 
