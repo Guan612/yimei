@@ -568,7 +568,8 @@ export class AiProviderService {
    */
   async validateProviderById(configId: number): Promise<boolean> {
     // 首先尝试从已加载的 provider 中获取
-    let provider = this.providerInstances.get(configId);
+    let provider: BaseProvider | null | undefined =
+      this.providerInstances.get(configId);
 
     // 如果没有找到（可能是未启用的配置），则从数据库加载并临时创建
     if (!provider) {
