@@ -9,17 +9,23 @@ import {
   Param,
 } from '@nestjs/common';
 import { UploadService } from './upload.service';
-import { CreateUploadDto, ConfirmUploadDto } from './dto/upload.dto';
+import {
+  CreateUploadDto,
+  ConfirmUploadDto,
+  BatchGetUrlsDto,
+} from './dto/upload.dto';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { success } from '../common/result';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
+import { RolesGuard } from '../auth/guard/roles.guard';
 import { UserInfo } from '../auth/decorators/current-user.decorator';
+import { Role, Roles } from '../auth/decorators';
 import { TokenDto } from '../auth/dto/auth.dto';
 import { Throttle } from '@nestjs/throttler';
 
 @Controller('upload')
 @ApiTags('上传对象存储')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
@@ -50,6 +56,46 @@ export class UploadController {
       confirmUploadDto.size,
     );
     return success('确认上传成功', data);
+  }
+
+  @Post('batch-urls')
+  @ApiOperation({ summary: '批量获取文件访问URL' })
+  async getBatchFileUrls(
+    @Body() batchGetUrlsDto: BatchGetUrlsDto,
+    @UserInfo() user?: TokenDto,
+  ) {
+    const data = await this.uploadService.getBatchFileUrls(
+      batchGetUrlsDto.fileIds,
+      user?.id || 0,
+      batchGetUrlsDto.expiresIn,
+    );
+    return success('成功获取文件访问URL', data);
+  }
+
+  @Post('admin/batch-urls')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: '管理员批量获取文件访问URL（无所有权限制）' })
+  async getBatchFileUrlsAsAdmin(@Body() batchGetUrlsDto: BatchGetUrlsDto) {
+    const data = await this.uploadService.getBatchFileUrlsAsAdmin(
+      batchGetUrlsDto.fileIds,
+      batchGetUrlsDto.expiresIn,
+    );
+    return success('成功获取文件访问URL', data);
+  }
+
+  @Get('admin/:fileId/url')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: '管理员根据文件ID获取访问URL（无所有权限制）' })
+  async getFileUrlAsAdmin(
+    @Param('fileId') fileId: string,
+    @Query('expiresIn') expiresIn?: string,
+  ) {
+    const expires = expiresIn ? parseInt(expiresIn) : 60 * 60;
+    const data = await this.uploadService.getFileUrlAsAdmin(
+      parseInt(fileId),
+      expires,
+    );
+    return success('成功获取文件访问URL', data);
   }
 
   @Get(':fileId/url')

@@ -36,4 +36,20 @@ const ConfirmUploadSchema = z.object({
 
 export class ConfirmUploadDto extends createZodDto(ConfirmUploadSchema) {}
 
+// 批量获取文件URL的DTO
+const BatchGetUrlsSchema = z.object({
+  fileIds: z
+    .array(z.number().int().positive({ message: '文件ID必须是正整数' }))
+    .min(1, { message: '至少需要提供一个文件ID' })
+    .max(100, { message: '单次最多获取100个文件URL' }),
+  expiresIn: z
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .describe('URL过期时间（秒），默认1小时'),
+});
+
+export class BatchGetUrlsDto extends createZodDto(BatchGetUrlsSchema) {}
+
 export class UpdateUploadDto {}
