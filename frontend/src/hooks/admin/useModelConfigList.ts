@@ -59,6 +59,7 @@ export function useModelConfigList(): UseModelConfigListReturn {
   const [configs, setConfigs] = useState<ModelConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [query, setQuery] = useState<QueryModelConfigDto>({});
@@ -68,8 +69,9 @@ export function useModelConfigList(): UseModelConfigListReturn {
       setLoading(true);
       const res = await modelListApi({ ...query, page, pageSize });
       if (res.code === 0 && res.data) {
-        setConfigs(res.data.list || []);
-        setTotal(res.data.total || 0);
+        setConfigs(res.data.data || []);
+        setTotal(res.data.pagination.total || 0);
+        setTotalPages(res.data.pagination.totalPages || 0);
       }
     } catch (error: any) {
       toast.error("加载模型配置失败", {
@@ -92,8 +94,6 @@ export function useModelConfigList(): UseModelConfigListReturn {
   useEffect(() => {
     loadConfigs();
   }, [page, query]);
-
-  const totalPages = Math.ceil(total / pageSize);
 
   return {
     configs,

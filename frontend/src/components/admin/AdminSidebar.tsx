@@ -9,6 +9,7 @@ import {
   Boxes,
   ArrowLeft,
   Sparkles,
+  History,
 } from "lucide-react";
 
 const navItems = [
@@ -26,6 +27,11 @@ const navItems = [
     title: "生成统计",
     href: "/admin/stats",
     icon: BarChart3,
+  },
+  {
+    title: "生成记录",
+    href: "/admin/generations",
+    icon: History,
   },
   {
     title: "模型管理",

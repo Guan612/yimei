@@ -129,6 +129,11 @@ export interface ImageGenerationHistory {
     createdAt?: string;
     updatedAt?: string;
   };
+  user?: {
+    id: number;
+    loginId?: string;
+    nickname?: string;
+  };
   parameters?: {
     steps?: number;
     samples?: number;

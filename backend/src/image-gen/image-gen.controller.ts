@@ -76,6 +76,19 @@ export class ImageGenController {
     return result;
   }
 
+  @Get('admin/all-history')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: '获取所有用户的图片生成历史（管理员）' })
+  async getAllHistory(
+    @Query() query: ImageGenerationHistoryQueryDto,
+  ): Promise<Result<any>> {
+    const result = await this.imageGenService.getAllGenerations(
+      query.page,
+      query.pageSize,
+    );
+    return result;
+  }
+
   @Get(':id')
   @ApiOperation({ summary: '获取单个生成记录详情' })
   async getGenerationById(

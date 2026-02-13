@@ -18,3 +18,5 @@ export type {
   UseDeleteDialogReturn,
   UseDeleteDialogOptions,
 } from "./useDeleteDialog";
+
+export { useStats } from "./useStats";

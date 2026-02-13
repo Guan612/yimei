@@ -56,6 +56,16 @@ export const getHistoryImgApi = (params?: ImageHistoryQuery) => {
 };
 
 /**
+ * 获取所有用户的生成历史（管理员专用）
+ */
+export const getAllHistoryImgApi = (params?: ImageHistoryQuery) => {
+  return api.get<ImageHistoryListResponse>(
+    `/api/image-gen/admin/all-history`,
+    { params }
+  );
+};
+
+/**
  * 获取单个生成记录详情
  */
 export const getByIdImgApi = (id: number) => {

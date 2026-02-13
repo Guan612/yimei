@@ -428,6 +428,35 @@ export class ImageGenService {
   }
 
   /**
+   * 获取所有用户的生成历史（管理员专用）
+   */
+  async getAllGenerations(page = 1, pageSize = 10) {
+    this.logger.log(
+      `管理员查询所有用户的图片生成历史，page=${page}, pageSize=${pageSize}`,
+    );
+
+    const result = await this.prisma.paginate(this.prisma.imageGeneration, {
+      page,
+      pageSize,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        file: true,
+        user: {
+          select: {
+            id: true,
+            loginId: true,
+            nickname: true,
+          },
+        },
+      },
+    });
+
+    this.logger.log(`找到 ${result.data.length} 条记录`);
+
+    return success('获取历史记录成功', result);
+  }
+
+  /**
    * 获取单个生成记录详情
    */
   async getGenerationById(id: number, userId: number) {
